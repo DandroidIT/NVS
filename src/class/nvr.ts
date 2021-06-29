@@ -2,7 +2,7 @@ import { spawn } from "child_process";
 import { PtzMoveParams } from "node-onvif-ts";
 import { WebSocketClient } from "ws";
 import configBase from "../config";
-import { helpersNEW } from "../lib/helper";
+import { helpers } from "../lib/helper";
 import { NoLogger } from "../lib/no-logger";
 import { iradarCam, IstreamFFMPEGCam, ISubscription, loginResponse, optNameNvr, returnData, typeWS } from "./interface";
 import { nvr_cam } from './nvr_cam';
@@ -55,7 +55,7 @@ class Nvr {
 
   ipIsOk(ipclient: string): boolean {
     if (this._blockPublicAllConnection === true) {
-      return helpersNEW.IsIpPrivate(ipclient)
+      return helpers.IsIpPrivate(ipclient)
     } else {
       return true
     }

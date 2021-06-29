@@ -3,7 +3,7 @@ import fs from 'fs';
 import Jimp from 'jimp';
 import { GotoPresetParams, Information, OnvifDevice, Profile, PtzMoveParams, SetPresetParams, Snapshot } from 'node-onvif-ts';
 import configBase, { model_logallarms } from "../config";
-import { helpersNEW } from '../lib/helper';
+import { helpers } from '../lib/helper';
 import { NoLogger } from '../lib/no-logger';
 import { elaborateVideo } from './nvr_video';
 
@@ -98,7 +98,7 @@ class nvr_cam {
   }
 
   private _pathElaborate(path: string, forMotion?: boolean): string {
-    let _urlElaborate = `${path}/${configBase.folderForCams.storeCam}/${this.id}/${helpersNEW.date.dateString().split(' ')[0]}`
+    let _urlElaborate = `${path}/${configBase.folderForCams.storeCam}/${this.id}/${helpers.date.dateString().split(' ')[0]}`
     if (forMotion) {
       _urlElaborate = `${_urlElaborate}/${configBase.folderForCams.motion}/`
     } else {
@@ -164,7 +164,7 @@ class nvr_cam {
       if (alarm) {
         if (imgBase64) {
           let arrPathImg = alarm.datarif.split('|')
-          let BaseString = await helpersNEW.imageToBase64(arrPathImg[0]) + '|' + await helpersNEW.imageToBase64(arrPathImg[1])
+          let BaseString = await helpers.imageToBase64(arrPathImg[0]) + '|' + await helpers.imageToBase64(arrPathImg[1])
           alarm.datarif = BaseString
         }
 
@@ -194,10 +194,10 @@ class nvr_cam {
         arr.push(arrSnap2.body)
         let isMotion = await this._diffRilevateV1(arr)
         if (isMotion.inAlarm) {
-          let alarm = await configBase.db.tabLogAllarms.create({ idcam: this.id, datarif: isMotion.arrImg.join('|'), stamptime: helpersNEW.date.dateISOLocate(), msg: 'ALLARME liveMotionV1' })
-          this.logger.log(`${helpersNEW.date.dateString()} ALLARM CAM ${this.nameCam} idalarm:${alarm?.id}`)
-          this.logger.w(`${helpersNEW.date.dateString()} ALLARM CAM ${this.nameCam} idalarm:${alarm?.id}`)
-          this._emitAlarm(`${helpersNEW.date.dateString()} ALLARM CAM ${this.nameCam} idalarm:${alarm?.id} link: <a href='/#/dettalarm/18/${alarm?.id}'>link</a>`)
+          let alarm = await configBase.db.tabLogAllarms.create({ idcam: this.id, datarif: isMotion.arrImg.join('|'), stamptime: helpers.date.dateISOLocate(), msg: 'ALLARME liveMotionV1' })
+          this.logger.log(`${helpers.date.dateString()} ALLARM CAM ${this.nameCam} idalarm:${alarm?.id}`)
+          this.logger.w(`${helpers.date.dateString()} ALLARM CAM ${this.nameCam} idalarm:${alarm?.id}`)
+          this._emitAlarm(`${helpers.date.dateString()} ALLARM CAM ${this.nameCam} idalarm:${alarm?.id} link: <a href='/#/dettalarm/18/${alarm?.id}'>link</a>`)
         } else {
 
         }
@@ -221,8 +221,8 @@ class nvr_cam {
       let distance = Jimp.distance(img1, img2); // perceived distance
       let different = Jimp.diff(img1, img2, 0.2);
       if (different.percent > 0.02 || distance > 0.02) { // TODO: una cartella per evento allarme
-        let img1Name = this._pathElaborate('.', true) + `/motion1_${helpersNEW.date.dateFULLString()}.jpg`
-        let img2Name = this._pathElaborate('.', true) + `/motion2_${helpersNEW.date.dateFULLString()}.jpg`
+        let img1Name = this._pathElaborate('.', true) + `/motion1_${helpers.date.dateFULLString()}.jpg`
+        let img2Name = this._pathElaborate('.', true) + `/motion2_${helpers.date.dateFULLString()}.jpg`
         img1.resize(800, Jimp.AUTO).write(img1Name)
         img2.resize(800, Jimp.AUTO).write(img2Name)
         return { inAlarm: true, arrImg: [img1Name, img2Name] }

@@ -1,7 +1,7 @@
 
 
 import { spawn } from 'child_process';
-import { helpersNEW } from '../lib/helper';
+import { helpers } from '../lib/helper';
 import { NoLogger } from "../lib/no-logger";
 import { IFFMPEGCam } from './interface';
 
@@ -17,7 +17,7 @@ class elaborateVideo {
   async startVideoRecording(source: string, path: string, duration: string): Promise<boolean> {
     return new Promise((res, err) => {
 
-      let pathSave = `${path}${helpersNEW.date.dateString().replace(' ', '_')}.avi` //optionVideo['savepath'] + helpersNEW.date.dateString().replace(' ', '_') + '.avi'
+      let pathSave = `${path}${helpers.date.dateString().replace(' ', '_')}.avi` //optionVideo['savepath'] + helpersNEW.date.dateString().replace(' ', '_') + '.avi'
       let ffmpegNew = spawn("ffmpeg", this.ffmpegOptVideo(source, pathSave, duration));
       ffmpegNew.stdout.on("data", (chunk: any) => {
         console.log('🚀 ~ file: nvr_video.ts ~ line 29 ~ elaborateVideo ~ ffmpegNew.stdout.on ~ chunk', chunk)

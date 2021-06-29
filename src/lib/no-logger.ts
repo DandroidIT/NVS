@@ -1,5 +1,5 @@
 import * as fs from 'fs'
-import { helpersNEW } from './helper'
+import { helpers } from './helper'
 enum Colors {
   reset = '\x1b[0m',
   Black = '\033[30m',
@@ -29,13 +29,13 @@ export class NoLogger {
   public get log(): Function {
     if (this.offLog)
       return () => { }
-    let builtMessagelog = `%c[${this.scope}] [${helpersNEW.date.dateFULLString()}]: ${Colors.Green}%s`
+    let builtMessagelog = `%c[${this.scope}] [${helpers.date.dateFULLString()}]: ${Colors.Green}%s`
     let clog = this._emitLog('log', builtMessagelog, ['color:orange;font-weight: bold;'])
     return clog
 
   }
   public get err(): Function {
-    let builtMessagelog = `%c[${this.scope}] [${helpersNEW.date.dateFULLString()}]: ${Colors.Red}%s`
+    let builtMessagelog = `%c[${this.scope}] [${helpers.date.dateFULLString()}]: ${Colors.Red}%s`
     let cerror = this._emitLog('error', builtMessagelog, ['color:red;font-weight: bold;'])
     return cerror
   }
@@ -51,7 +51,7 @@ export class NoLogger {
     this.w('Log Start')
   }
   private _writeFile(message: string): void {
-    fs.appendFile(this.filePath, `[${helpersNEW.date.dateFULLString()}] ${message}\r\n`, {}, () => {
+    fs.appendFile(this.filePath, `[${helpers.date.dateFULLString()}] ${message}\r\n`, {}, () => {
 
     })
   }

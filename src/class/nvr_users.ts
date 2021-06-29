@@ -2,7 +2,7 @@ import { NoLogger } from "../lib/no-logger";
 import WebSocket, { WebSocketClient } from "ws";
 import configBase, { model_notify_user } from "../config";
 //import wpCustom from "./webpush";
-import { nanoId, helpersNEW, helpJwt } from '../lib/helper'
+import { nanoId, helpers, helpJwt } from '../lib/helper'
 import { ISubscription, IUser, typeWS, loginResponse } from './interface'
 import { WebPushError, SendResult } from "web-push";
 
@@ -68,7 +68,7 @@ class users {
           endpoint: clientSubscription.endpoint.toString(),
           auth: clientSubscription.keys.auth.toString(),
           p256dh: clientSubscription.keys.p256dh.toString(),
-          insertdata: helpersNEW.date.dateISOLocate(),
+          insertdata: helpers.date.dateISOLocate(),
           enabled: true
         }
       );
@@ -160,7 +160,7 @@ class users {
       if (this.filter(dbUuser.id!.toString())) {
         return { success: false, token: '', error: 'user in login' }
       }
-      let getData = helpersNEW.date.dateString();
+      let getData = helpers.date.dateString();
       let token = helpJwt.getToken(
         { id: `${dbUuser.id!}`, create_at: getData },
         configBase.secret,
