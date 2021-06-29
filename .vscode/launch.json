@@ -12,7 +12,7 @@
             "sourceMaps": true,
             "restart": false,
             "trace": "all",
-            "preLaunchTask": "build", //preLaunchTask": "tsc: watch - tsconfig.json", //build
+            "preLaunchTask": "build",
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
             ]

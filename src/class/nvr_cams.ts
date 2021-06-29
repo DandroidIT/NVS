@@ -50,7 +50,7 @@ class cams {
         this._sendAlamsUser
       );
       this._listCam.push(cam);
-      const checkcam = await cam.InitCam(false, false) //recordH24: boolean, motionsAlert: boolean METTERE IN CONFIG
+      const checkcam = await cam.InitCam(false, false)
       this.logger.log(`Cams -> loadCams -> AFETR INIT: ${checkcam} -- ${configCam.id} - ${configCam.name} ${configCam.xaddr}`);
       this.logger.w(`Cams -> loadCams -> AFETR INIT: ${checkcam} -- ${configCam.id} - ${configCam.name} ${configCam.xaddr}`);
 
@@ -151,7 +151,7 @@ class cams {
     }
   }
 
-  //TODO: 12/06/2021 ok testare portato tutto con possibili future estensioni di opzioni
+
   async managerAlarm(nameOptions: alarmMethod, idCam: string, dataFilter: string, idAlarm: string) {
     console.log('🚀 ~ file: nvr_cams.ts ~ line 151 ~ cams ~ managerAlarm ~ nameOptions', nameOptions, idCam)
     try {

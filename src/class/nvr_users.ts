@@ -1,8 +1,7 @@
 import { NoLogger } from "../lib/no-logger";
 import WebSocket, { WebSocketClient } from "ws";
 import configBase, { model_notify_user } from "../config";
-//import { helpers } from "./helpers";
-import wpCustom from "./webpush";
+//import wpCustom from "./webpush";
 import { nanoId, helpersNEW, helpJwt } from '../lib/helper'
 import { ISubscription, IUser, typeWS, loginResponse } from './interface'
 import { WebPushError, SendResult } from "web-push";
@@ -22,36 +21,36 @@ class users {
   async SendAlamrs(notifica: string) {
 
 
-    let nottifyUser = await configBase.db.tabNotifyUsers.find();
-    nottifyUser.forEach(async (not) => {
-      if (not.enabled === false)
-        return
-      try {
-        await wpCustom.push({ endpoint: not?.endpoint.toString()!, keys: { auth: not?.auth.toString()!, p256dh: not?.p256dh.toString()! }, },
-          { title: notifica, actions: [{ action: "open_url", title: "Read Now" }] })
-        console.log('🚀 ~ file: nvr_users.ts ~ line 87 ~ users ~ nottifyUser.forEach ')
-
-      } catch (error: any) {
-        console.log('🚀 ~ file: nvr_users.ts ~ line 99 ~ users ~ nottifyUser.forEach ~ error', error)
-        //return
-        let webPushError: WebPushError = error
-        console.log(`SendAlamrs webPushError ERROR - statusCode: ${webPushError.statusCode} body:${webPushError.body} message:${webPushError.message} endpoint ${webPushError.endpoint}`);
-        if (webPushError.statusCode === 410 || webPushError.statusCode === 106) {
-          if (webPushError.endpoint) {
-            let deletenotify = await configBase.db.tabNotifyUsers.remove({
-              endpoint: webPushError.endpoint,
-            });
-            console.log(`SendAlamrs delete user notify endpoint ${webPushError.endpoint} success: ${deletenotify.length}`);
-            this.logger.log(`SendAlamrs delete user notify endpoint ${webPushError.endpoint} success: ${deletenotify.length}`);
-          }
-        }
-      }
-    });
+    /*  let nottifyUser = await configBase.db.tabNotifyUsers.find();
+     nottifyUser.forEach(async (not) => {
+       if (not.enabled === false)
+         return
+       try {
+         await wpCustom.push({ endpoint: not?.endpoint.toString()!, keys: { auth: not?.auth.toString()!, p256dh: not?.p256dh.toString()! }, },
+           { title: notifica, actions: [{ action: "open_url", title: "Read Now" }] })
+         console.log('🚀 ~ file: nvr_users.ts ~ line 87 ~ users ~ nottifyUser.forEach ')
+ 
+       } catch (error: any) {
+         console.log('🚀 ~ file: nvr_users.ts ~ line 99 ~ users ~ nottifyUser.forEach ~ error', error)
+         //return
+         let webPushError: WebPushError = error
+         console.log(`SendAlamrs webPushError ERROR - statusCode: ${webPushError.statusCode} body:${webPushError.body} message:${webPushError.message} endpoint ${webPushError.endpoint}`);
+         if (webPushError.statusCode === 410 || webPushError.statusCode === 106) {
+           if (webPushError.endpoint) {
+             let deletenotify = await configBase.db.tabNotifyUsers.remove({
+               endpoint: webPushError.endpoint,
+             });
+             console.log(`SendAlamrs delete user notify endpoint ${webPushError.endpoint} success: ${deletenotify.length}`);
+             this.logger.log(`SendAlamrs delete user notify endpoint ${webPushError.endpoint} success: ${deletenotify.length}`);
+           }
+         }
+       }
+     }); */
   }
 
-  //TODO: firefox pwa vedere implementazione
+  //TODO: firefox pwa :
   // base: https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Installable_PWAs
-  // SubscriptionDisabled: fare controllo in app per disabilitare le notifiche e fare test
+
   async managerPush(protocol: string, type: 'Subscription' | 'getSubscription' | 'unSubscription' | 'SubscriptionDisabled', clientSubscription: ISubscription) {
     let notifyUsers: model_notify_user[] = []
     let user = this.verifyUserToken(protocol)

@@ -36,7 +36,7 @@ interface connectWS {
 
 export interface ICamApi {
   id: string; information: [string, any][], name: string, asPTZ: boolean;
-  inerror: boolean, liveH24: boolean, motion: boolean //, arrAllarm: string[]
+  inerror: boolean, liveH24: boolean, motion: boolean
 }
 
 export interface IstreamFFMPEGCam {
@@ -60,8 +60,3 @@ export interface loginResponse {
 
 export interface iradarCam { urn: string; name: string; xaddrs: string[]; username?: string; password?: string, exist: boolean }
 
-/* export interface iCam { // creata per class nvr_cam ora non più usata
-  id: string, urn: string, camRX: OnvifDevice, ip: string, username: string, password: string,
-  urlRTSPstream: string, information: Information, nameCam: string, asPtz: boolean, inError: boolean
-  // IManagedDevice
-} */

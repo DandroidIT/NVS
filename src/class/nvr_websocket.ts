@@ -8,7 +8,7 @@ import { wsEventRoute, checkToken, wsStreamRouter, setSocket } from '../route/ws
 
 class Nvr_ws {
 
-	logger: NoLogger //logger: logs = new logs('websocket')
+	logger: NoLogger
 	private _wsServerStream!: Server
 	private _wsServerEvent!: Server
 	constructor() {
@@ -41,7 +41,7 @@ class Nvr_ws {
 		if (request.url?.split('/'))
 			getRoute = request.url?.split('/')
 
-		if (getRoute[1] === 'apievent') { //ATTENZIONE PRIMA ERA 'datacmd'
+		if (getRoute[1] === 'apievent') {
 			this._wsServerEvent.handleUpgrade(request, socket, head, (wsclient: WebSocket, request: IncomingMessage) => {
 				this.logger.log('svrUpgrade _wsServerEvent handleUpgrade...')
 				this._wsServerEvent.emit('connection', wsclient, request)

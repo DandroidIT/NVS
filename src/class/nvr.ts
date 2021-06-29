@@ -141,7 +141,7 @@ class Nvr {
   }
 
   private Createffmpeg(url_cam: string, idCam: string) {
-    let ffmpegNew = spawn("ffmpeg", ffmpegOpt(url_cam)); //-< questo deve avvenire in this._Cams.urlRTSPStream(idCam);
+    let ffmpegNew = spawn("ffmpeg", ffmpegOpt(url_cam));
     ffmpegNew.stdout.on("data", (chunk: any) => {
       if (this._Users.sendVideo(idCam, chunk)) {
         this.ffmpeg_kill(idCam);

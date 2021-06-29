@@ -7,16 +7,16 @@ import compress from 'koa-compress';
 import helmet from 'koa-helmet';
 import koaJwt from 'koa-jwt';
 import configBase from "../config";
-//import NvrRouters from '../route/nvr_api.router'
+
 import { NoLogger } from '../lib/no-logger';
 import AuthRouters from '../route/auth.router';
 import Nvr from './nvr';
 import Nvr_skt from './nvr_websocket';
 
-const logger = new NoLogger('_webserver', true)//, true) // log.newLogger('_webserver')
+const logger = new NoLogger('_webserver', true)
 logger.log('log for webserver')
 class serverApi extends Koa {
-  //private _routers: Router = new Router();
+
   _ip: string = ''
   _port: number = 0
   _httpsServer!: https.Server
@@ -34,7 +34,7 @@ class serverApi extends Koa {
     this.use(this._mwCheckAuth)
     this.use(
       koaJwt({ secret: configBase.secret })
-        .unless({ path: [/^\/login/, /^\/register/, /^\/api/] }) // ,  /^\/broadcast/, /^\/subscription/ , /^\/ws/ una volta fatto i test eliminare ws e metterlo in AUTH
+        .unless({ path: [/^\/login/, /^\/register/, /^\/api/] })
     );
 
 
@@ -64,11 +64,11 @@ class serverApi extends Koa {
     this.use(Cors())
     this.use(helmet())
     this.use(bodyParser())
-    //this.use(this.securConnection) <- disabilitato: tutte le route ora passano per websocket (nuova implementazione in Nvr.ipIsOk)
+    //this.use(this.secureConnection) <- (new in Nvr.ipIsOk)
     this.use(this._logger)
   }
 
-  /* 	securConnection = (ctx: Koa.ParameterizedContext, next: () => Promise<any>) => {
+  /* 	secureConnection = (ctx: Koa.ParameterizedContext, next: () => Promise<any>) => {
       const nm = new Netmask('192.168.9.0/24')
       if (Nvr._blockPublicAllConnection && nm.contains(ctx.ip) === false) {
         logger.err(`DENY ACCESS securConnection for ip ${ctx.ip}`);
@@ -94,7 +94,7 @@ class serverApi extends Koa {
 
 
   async _mwCheckAuth(ctx: Koa.ParameterizedContext, next: () => Promise<any>) { // custom error koa-jwt
-    //console.log('🚀 controllo _mwCheckAuth')
+
     const urlExclude = ['/login'] //,'/broadcast','/subscription'
     if (!urlExclude.includes(ctx.originalUrl)) {
 
