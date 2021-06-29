@@ -14,22 +14,25 @@ Network Video Surveillance
 
 - PTZ / PRESET (if compatible)
 
+- Client web (in development)
+
 ### Installation
 
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
+1. Clone the repo
 
 ```sh
 git clone https://github.com/DandroidIT/NVS.git
 ```
 
-3. Install NPM packages
-   ```sh
-   npm install
-   ```
-4. Rename `src/config/env_dev_sample.ts` in `src/config/env_dev.ts`
+2. Install NPM packages
 
-5. Start
+```sh
+npm install
+```
+
+3. Rename `src/config/env_dev_sample.ts` in `src/config/env_dev.ts`
+
+4. Start
    ```sh
     npm start
    ```
