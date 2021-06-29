@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "module": "commonjs",
+        "outDir": "out",
+        "esModuleInterop": true,
+        "sourceMap": true
+    },
+    "exclude": [
+        "scr_prev_version"
+    ]
+}
