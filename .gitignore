@@ -7,3 +7,4 @@ src/class/webpush.ts
 package-lock.json
 storage*.db
 
+src/lib/testlog_.ts
