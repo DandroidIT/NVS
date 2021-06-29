@@ -21,7 +21,7 @@ enum wsEventName {
 }
 
 export function setSocket(wsServer: WebSocket.Server) {
-	//nvrCtrl.startPingCustom()<- disabilitato per facilitare debug attivare e verificare in produzione
+	//nvrCtrl.startPingCustom()<- disabilitato per debug attivare e verificare in produzione
 }
 
 
@@ -30,7 +30,6 @@ export function wsEventRoute(wsClient: WebSocketClient, request: IncomingMessage
 	wsClient.on('undefined', mess => { logger.log(` undefined ${mess}`) })
 	wsClient.on("error", (err) => {
 		logger.err(`wsEventRoute: ERROR: Client disconnected - reason: ${err}`);
-		//this.logger.w(`wsServerEventConnection: ERROR: Client disconnected - reason: ${err}`);
 	});
 	_wsEventBind(wsClient, request)
 
@@ -69,7 +68,7 @@ let _wsEventBind = (ws: WebSocketClient, request: IncomingMessage) => {
 	ws.on(camCtrl.camEvent.CamControll, async (data) => ws.send(await camCtrl.move(data)))
 	ws.on(camCtrl.camEvent.CamSetOption, async (data) => ws.send(await camCtrl.SetCamOption(data), () => { }))
 
-	ws.on(nvrCtrl.nvrEvent.ManagerPush, async (data) => ws.send(await nvrCtrl.managerPush(data)))//<- passare anche id user ogniuno a le sue notifiche
+	ws.on(nvrCtrl.nvrEvent.ManagerPush, async (data) => ws.send(await nvrCtrl.managerPush(data)))
 	ws.on(nvrCtrl.nvrEvent.SetOption, async (data) => ws.send(await nvrCtrl.SetOptions(data)))
 
 	ws.on(camCtrl.camEvent.ManagerAlarms, async (data) => ws.send(await camCtrl.managerAlarms(data)))
@@ -77,7 +76,7 @@ let _wsEventBind = (ws: WebSocketClient, request: IncomingMessage) => {
 	ws.on(nvrCtrl.nvrEvent.ManagerRadarCams, async (data) => ws.send(await nvrCtrl.managerRadarCams(data)))
 
 	ws.on(nvrCtrl.nvrEvent.logoutUser, async (data) => ws.send(nvrCtrl.logoutUser(data)))
-	//fare chiamata su ApiWS su client e testare
+
 }
 
 export function wsStreamRouter(wsClient: WebSocketClient, request: IncomingMessage) {
@@ -86,16 +85,6 @@ export function wsStreamRouter(wsClient: WebSocketClient, request: IncomingMessa
 
 export function checkToken(request: IncomingMessage): boolean {
 	try {
-		/* if (this._getIpPublic(request.socket.remoteAddress!)) { <== vedere helpers e finire di implementare
-			console.log('_checktoken blocco WSS!!!!!!!!!!!!!!!!!!!');
-			logger.err(`_checktoken _getIpPublic BLOCK ${request.socket.remoteAddress}`)
-			logger.w(`_checktoken _getIpPublic BLOCK ${request.socket.remoteAddress}`)
-			return false
-		} */
-		//console.log('sec-websocket-protocol:', request.headers['sec-websocket-protocol'])
-		/* if(nvrCtrl.checkIpIsOk(request.socket.remoteAddress!)){
-			return false
-		} */
 		logger.log('sec-websocket-protocol:', request.headers['sec-websocket-protocol'])
 		let u = _Nvr.verifyUser(request.headers['sec-websocket-protocol']!)
 		if (u === undefined) {
