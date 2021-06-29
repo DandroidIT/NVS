@@ -2,6 +2,8 @@ node_modules
 ssl
 out
 src/config/env_dev.ts
-package-lock.json
 src/class/webpush.ts
-storage_test.db
+
+package-lock.json
+storage*.db
+
