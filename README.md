@@ -30,9 +30,14 @@ git clone https://github.com/DandroidIT/NVS.git
 npm install
 ```
 
-3. Rename `src/config/env_dev_sample.ts` in `src/config/env_dev.ts`
+3. Rename file
+
+```sh
+`src/config/env_dev_sample.ts` in `src/config/env_dev.ts`
+```
 
 4. Start
-   ```sh
-    npm start
-   ```
+
+```sh
+npm start
+```
