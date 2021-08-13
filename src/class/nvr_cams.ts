@@ -9,7 +9,7 @@ type alarmMethod = 'getAlarmCam' | 'getAlarmCamList' | 'getDayAndAlarmList' | 'g
 
 type nameCamOption = 'live24' | 'livemotion' | 'delete' | 'altro'
 
-type radarMethod = 'startRadarCams' | 'saveRadarCams' | 'delRadarCams'
+
 
 class cams {
 
@@ -119,11 +119,11 @@ class cams {
   }
 
 
-  async setCamOption(idCam: string, NameOption: nameCamOption, data: any, checkOnly = false) {
+  async setCamOption<T>(idCam: string, NameOption: nameCamOption, data: T, checkOnly = false) {
     try {
       let cam = this.getCam(idCam)
       if (!cam) return false
-      if (NameOption === 'live24') {
+      if (NameOption === 'live24' && typeof data === 'boolean') {
         if (checkOnly)
           return cam.recordingH24
         if (cam.recordingH24 === data)
@@ -131,7 +131,7 @@ class cams {
         cam.recordingH24 = data
         if (cam.recordingH24)
           cam.recordingContinuos()
-      } else if (NameOption === 'livemotion') {
+      } else if (NameOption === 'livemotion' && typeof data === 'boolean') {
         if (checkOnly)
           return cam.liveMotion
         if (cam.liveMotion === data)
@@ -141,19 +141,18 @@ class cams {
           cam.liveMotionV1()
       } else if (NameOption === 'delete') {
         let check = await this.deleteCam(idCam)
-        console.log('🚀 ~ file: nvr_cams.ts ~ line 148 ~ cams ~ setCamOption ~ check', check)
-
+        return check
       }
       return data
     } catch (error) {
-      this.logger.log('file: nvr_cams.ts ~ line 134 ~ setCamOption ~ error', error)
+      this.logger.log('file: nvr_cams.ts ~ setCamOption ~ error', error)
       return false
     }
   }
 
 
   async managerAlarm(nameOptions: alarmMethod, idCam: string, dataFilter: string, idAlarm: string) {
-    console.log('🚀 ~ file: nvr_cams.ts ~ line 151 ~ cams ~ managerAlarm ~ nameOptions', nameOptions, idCam)
+    console.log('🚀 ~ file: nvr_cams.ts ~ cams ~ managerAlarm ~ nameOptions', nameOptions, idCam)
     try {
       let where = "";
       if (nameOptions == 'getDayAndAlarmCount') {
@@ -196,29 +195,26 @@ class cams {
 
   }
 
-  async managerRadarCams(nameMethod: radarMethod, radarCam?: iradarCam) {
-    if (nameMethod === 'startRadarCams') {
-      let RadarResult = await startProbe();
-      let RadarCams: Array<iradarCam> = []
-      RadarResult.map((prob: Probe) => {
-        let cam = this._listCam.find(cam => cam.urn === prob.urn)
-        RadarCams.push({ urn: prob.urn, name: cam === undefined ? prob.name : cam.nameCam, xaddrs: prob.xaddrs, exist: cam === undefined ? false : true })
-      })
-      return RadarCams;
-    } else if (nameMethod === 'saveRadarCams') {
-      let checksaveCam = await this.saveCam(radarCam)
-      return checksaveCam
-    } else if (nameMethod === 'delRadarCams') {
-
-    }
-
-
+  async RadarCams(): Promise<iradarCam[]> {
+    let _RadarCams: Array<iradarCam> = []
+    let RadarResult = await startProbe();
+    RadarResult.map((prob: Probe) => {
+      let cam = this._listCam.find(cam => cam.urn === prob.urn)
+      _RadarCams.push({ urn: prob.urn, name: cam === undefined ? prob.name : cam.nameCam, xaddrs: prob.xaddrs, username: '', password: '', exist: cam === undefined ? false : true })
+    })
+    return _RadarCams;
   }
 
   /** Update or Create cam and reload cams*/
 
-  async saveCam(radarCam: iradarCam) {
+  async saveCam(radarCam: iradarCam, onlyNew?: boolean) {
     try {
+      if (onlyNew) {
+        let result = await configBase.db.tabCams.findOne({ xaddr: radarCam.xaddrs.toString() })
+        if (result) {
+          return false
+        }
+      }
       let resultSaveCams = await configBase.db.tabCams.updateOrCreate(
         {
           urn: radarCam.urn.toString(),
@@ -238,27 +234,31 @@ class cams {
 
       if (resultSaveCams.length) {
         await this.loadCams(true);
-        return this._listCam
+        return true
       }
-      return []
+      return false
 
     } catch (error) {
       console.log("savecam error: ", error);
-      return [];
+      return false
     }
   }
 
   async deleteCam(id: string) {
     try {
       let check = await configBase.db.tabCams.remove({ id: Number(id) })
-      await this.loadCams(true);
-      return check;
+      if (check.length) {
+        await this.loadCams(true);
+        return true
+      } else {
+        return false
+      }
     } catch (error) {
       console.log("deleteCam error: ", error);
-      return [];
+      return false;
     }
   }
 
 }
 
-export { cams, nameCamOption, alarmMethod, radarMethod };
+export { cams, nameCamOption, alarmMethod };

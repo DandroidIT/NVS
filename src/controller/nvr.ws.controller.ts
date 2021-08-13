@@ -12,7 +12,8 @@ enum NvrEventName {
   PONG = 'pong',
   ManagerPush = 'push_manager',
   SetOption = "nvr_set_option",
-  ManagerRadarCams = "radarcams_manager",
+  RadarCams = "radarcams",
+  saveRadarCam = "saveradarcam",
   logoutUser = 'logout'
 }
 
@@ -28,24 +29,6 @@ class NvrWsController {
         // logger.log(`PONG dal client ws.idConnect: ${ws.idConnect} `)
         ws.online = true
       })
-      /* 			if (type === 'api') {
-              ws.online = true
-              /* ws.idConnect = nanoId.getId()
-              Nvr.setUserWS(ws, protocol, 'api') /
-              ws.on(this.nvrEvent.PONG, () => {
-                // logger.log(`PONG dal client ws.idConnect: ${ws.idConnect} `)
-                ws.online = true
-              })
-              ws.on("close", (code: number, reason: string) => {
-                logger.log(`NvrWsController InitClient : CLOSE API Client disconnected user.id: ${user?.id} user.idconnect:${user?.idconnect} ws.idConnect:${ws.idConnect} - reason: ${reason} code: ${code}`);
-                NvrWsController.checkUserWS(protocol)
-              })
-            } else if (type === 'stream') {
-              ws.on("close", (code: number, reason: string) => {
-                logger.log(`NvrWsController InitClient : CLOSE STREM Client disconnected user.id: ${user?.id} user.idconnect:${user?.idconnect} ws.idConnect:${ws.idConnect} - reason: ${reason} code: ${code}`);
-                // TODO: qui si puo spostare un user setWS
-              })
-            }  */
     } else {
       ws.terminate()
     }
@@ -99,7 +82,6 @@ class NvrWsController {
 
   public static async managerPush(rawdata: any) {
     let { typeSubscription, subscription_client, token } = JSON.parse(rawdata).payload
-    console.log('🚀 ~ file: nvr.ws.controller.ts ~ line 84 ~ NvrWsController ~ managerPush ~ typeSubscription:', typeSubscription, ' subscription_client:', subscription_client)
     let checkPush = await Nvr.NotifySubscriptionUser(token, typeSubscription, subscription_client)
     return JSON.stringify({ type: this.nvrEvent.ManagerPush, payload: checkPush })
   }
@@ -107,15 +89,20 @@ class NvrWsController {
   static SetOptions(rawdata: any) {
     let { typeOption, data, checkOnly } = JSON.parse(rawdata).payload
     let checkOption = Nvr.setOptions(typeOption, data, checkOnly)
-    console.log('🚀 ~ file: nvr.ws.controller.ts ~ line 93 ~ NvrWsController ~ SetOptions ~ checkOption', checkOption)
     return JSON.stringify({ type: this.nvrEvent.SetOption, payload: checkOption })
   }
-  static async managerRadarCams(rawdata: any) {
-    let { typeMethod, radarCam } = JSON.parse(rawdata).payload
-    let resultmanagerRadarCams = await Nvr.managerRadarCams(typeMethod, radarCam)
-    return JSON.stringify({ type: this.nvrEvent.ManagerRadarCams, payload: resultmanagerRadarCams })
+
+  static async radarCams() {
+    let resultmanagerRadarCams = await Nvr.RadarCams()
+    return JSON.stringify({ type: this.nvrEvent.RadarCams, payload: resultmanagerRadarCams })
   }
 
+  static async saveRadarCam(rawdata: string) {
+    let { cam } = JSON.parse(rawdata).payload
+    let res = await Nvr.saveRadarCam(cam)
+    return JSON.stringify({ type: this.nvrEvent.saveRadarCam, payload: res })
+
+  }
 
 }
 

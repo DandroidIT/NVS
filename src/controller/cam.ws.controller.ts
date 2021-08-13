@@ -1,19 +1,20 @@
 import { IncomingMessage } from "http";
-import WebSocket, { WebSocketClient } from "ws";
-import { ICamApi } from '../class/interface'
+import { WebSocketClient } from "ws";
+import { ICamApi, returnData } from '../class/interface'
 import Nvr from '../class/nvr'
 import { NoLogger } from '../lib/no-logger'
 import NvrWsController from "./nvr.ws.controller";
 
 
-const logger = new NoLogger('CamWSController', true)//, true)
+const logger = new NoLogger('CamWSController', true)
 logger.log('Start log for CamWSController')
 enum CamEventName {
   CamControll = 'camcontroll',
   CamList = 'camlist',
   CamSetOption = 'setcamoption',
   TEST = 'test',
-  ManagerAlarms = "manageralarms"
+  ManagerAlarms = "manageralarms",
+  CamScreenshot = 'camscreenshot'
 }
 
 class CamWsController {
@@ -23,7 +24,7 @@ class CamWsController {
     logger.log('CamWsController ~ move ~ data', data)
     try {
       let { cmd, tagcam, speed, timeout, preset } = JSON.parse(data).payload
-      let checkCommand = false
+      let checkCommand: returnData<boolean>
       if (cmd === 'move_stop') {
         checkCommand = Nvr.stopCam(tagcam)
       } else if (cmd === 'move') {
@@ -32,9 +33,6 @@ class CamWsController {
         checkCommand = await Nvr.presetCam(tagcam, preset, speed)
       } else if (cmd === 'save_preset') {
         checkCommand = await Nvr.presetCamSave(tagcam, preset)
-      } else if (cmd === 'screenshot') {
-        let foto = await Nvr.screenshot(tagcam)
-        return JSON.stringify({ type: cmd, payload: foto?.body })
       } else {
         return JSON.stringify({ type: cmd, payload: checkCommand })
       }
@@ -44,6 +42,12 @@ class CamWsController {
       return error
     }
 
+  }
+
+  public static async screenshot(data: any): Promise<string> {
+    let { tagcam } = JSON.parse(data).payload
+    let respScreenshot = await Nvr.screenshot(tagcam)
+    return JSON.stringify({ type: `${this.camEvent.CamScreenshot}`, payload: respScreenshot })
   }
 
   public static async list() {
@@ -58,10 +62,9 @@ class CamWsController {
     return JSON.stringify({ type: 'camlist', payload: arrCam })
   }
 
-  /*  public static StreamCam(idCam: string, ws: WebSocketClient, request: IncomingMessage) {
-     Nvr.streamCam(idCam, ws, request.headers['sec-websocket-protocol']!)
-   } */
-  public static StreamCam(ws: WebSocketClient, request: IncomingMessage) {// nuova versione 31 maggio 2021
+
+
+  public static StreamCam(ws: WebSocketClient, request: IncomingMessage) {
     let getRoute: string[] | undefined = request.url?.split('/')
     let protocol = request.headers['sec-websocket-protocol']
     if (getRoute?.length && protocol?.length) {

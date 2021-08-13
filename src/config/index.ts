@@ -17,9 +17,11 @@ class configBase {
   public ip = env_dev.ip
   public port = env_dev.port
   public https = {
-    key: fs.readFileSync('./ssl/server_dev.key'),
-    cert: fs.readFileSync('./ssl/server_dev.crt')
+    key: fs.readFileSync(`${env_dev.cert_key}`),
+    cert: fs.readFileSync(`${env_dev.cert_crt}`)
   };
+  public AppClient = { start: env_dev.serversStatic, folder: env_dev.serversStaticFolder, route: env_dev.serversStaticRoute }
+
   public secret = env_dev.secret
   public namedb = env_dev.database
   public folderForCams = efolder

@@ -157,15 +157,19 @@ class users {
       password: pass,
     });
     if (dbUuser) {
-      if (this.filter(dbUuser.id!.toString())) {
-        return { success: false, token: '', error: 'user in login' }
-      }
       let getData = helpers.date.dateString();
       let token = helpJwt.getToken(
         { id: `${dbUuser.id!}`, create_at: getData },
         configBase.secret,
         { expiresIn: "1d" }
       );
+
+      if (this.filter(dbUuser.id!.toString())) {
+        let U = this.filter(dbUuser.id.toString())
+        this.logout(U.token)
+        return { success: false, token: '' }
+      }
+
       this.Add({
         id: dbUuser.id!.toString(),
         idconnect: nanoId.getId(),
@@ -182,27 +186,24 @@ class users {
 
   }
 
-
-  async update(
-    username: string,
-    pass: string,
-    usernameNew: string,
-    passNew: string
-  ) {
-    let user = await configBase.db.tabUsers.findOne({
-      username: username,
-      password: pass,
-    });
+  logout(token: string, checkWS = false) {
+    let user = this.verifyUserToken(token)
     if (user) {
-      let checkUserNew = await configBase.db.tabUsers.update(
-        { username: usernameNew },
-        { password: passNew }
-      );
-      return checkUserNew ? true : false;
-    }
+      if (checkWS && user.ws_list.size > 1) {
+        return false
+      }
+      if (user.ws_list.size) {
+        user.ws_list.forEach(wsUser => {
+          wsUser.ws.terminate()
+        });
 
-    return false;
+      }
+      this.remove(user.id)
+      return true
+    }
+    return false
   }
+
 
   verifyUserToken(authToken: string) {
     helpJwt.verifyToken(authToken, configBase.secret, { complete: true });
@@ -238,24 +239,28 @@ class users {
     return streamHeader;
   }
 
-  logout(token: string, checkWS = false) {
-    let user = this.verifyUserToken(token)
+  async update(
+    username: string,
+    pass: string,
+    usernameNew: string,
+    passNew: string
+  ) {
+    let user = await configBase.db.tabUsers.findOne({
+      username: username,
+      password: pass,
+    });
     if (user) {
-      if (checkWS && user.ws_list.size > 1) {
-        return false
-      }
-      if (user.ws_list.size) {
-        user.ws_list.forEach(wsUser => {
-          wsUser.ws.terminate()
-        });
-        this._listUsers.delete(user.id)
-        return true
-      }
-
-
+      let checkUserNew = await configBase.db.tabUsers.update(
+        { username: usernameNew },
+        { password: passNew }
+      );
+      return checkUserNew ? true : false;
     }
-    return false
+
+    return false;
   }
+
+
 }
 
 export { users }

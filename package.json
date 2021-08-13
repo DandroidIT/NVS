@@ -1,6 +1,6 @@
 {
   "name": "n.v.s.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Network Video Surveillance",
   "main": "start.js",
   "scripts": {
@@ -19,11 +19,13 @@
   "dependencies": {
     "@koa/cors": "^3.1.0",
     "@types/jsonwebtoken": "^8.5.0",
+    "@types/koa__cors": "^3.0.2",
     "@types/koa-bodyparser": "^4.3.0",
     "@types/koa-compress": "^4.0.1",
     "@types/koa-helmet": "^6.0.1",
+    "@types/koa-mount": "^4.0.0",
     "@types/koa-router": "^7.4.1",
-    "@types/koa__cors": "^3.0.2",
+    "@types/koa-static": "^4.0.2",
     "@types/nanoid": "^2.1.0",
     "@types/sql.js": "^1.0.3",
     "@types/web-push": "^3.3.0",
@@ -34,7 +36,9 @@
     "koa-compress": "^5.0.1",
     "koa-helmet": "^6.0.0",
     "koa-jwt": "^4.0.0",
+    "koa-mount": "^4.0.0",
     "koa-router": "^10.0.0",
+    "koa-static": "^5.0.0",
     "nanoid": "^3.1.20",
     "node-onvif-ts": "^0.1.7",
     "private-ip": "^2.2.1",

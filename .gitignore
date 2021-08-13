@@ -1,9 +1,10 @@
 node_modules
 ssl
 out
+storecams
 src/config/env_dev.ts
 src/class/webpush.ts
-
+src/client
 package-lock.json
 storage*.db
 

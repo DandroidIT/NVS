@@ -13,7 +13,7 @@ export interface ISubscription {
 
 export type optNameNvr = 'ipblock' | 'other';
 
-export type returnData<T> = { inError?: boolean; msg: string; dataResult: T }
+export type returnData<T> = { inError: boolean; msg: string; dataResult?: T }
 
 export interface IUser {
   id: string;
@@ -58,5 +58,5 @@ export interface loginResponse {
   error?: string;
 }
 
-export interface iradarCam { urn: string; name: string; xaddrs: string[]; username?: string; password?: string, exist: boolean }
+export interface iradarCam { urn: string; name: string; xaddrs: string[]; username: string; password: string, exist: boolean }
 

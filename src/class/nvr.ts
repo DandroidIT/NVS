@@ -1,12 +1,12 @@
 import { spawn } from "child_process";
-import { PtzMoveParams } from "node-onvif-ts";
+import { PtzMoveParams, Snapshot } from "node-onvif-ts";
 import { WebSocketClient } from "ws";
 import configBase from "../config";
 import { helpers } from "../lib/helper";
 import { NoLogger } from "../lib/no-logger";
 import { iradarCam, IstreamFFMPEGCam, ISubscription, loginResponse, optNameNvr, returnData, typeWS } from "./interface";
 import { nvr_cam } from './nvr_cam';
-import { alarmMethod, cams, nameCamOption, radarMethod } from "./nvr_cams";
+import { alarmMethod, cams, nameCamOption } from "./nvr_cams";
 import { users as nvrUsers } from "./nvr_users";
 import { ffmpegOpt } from "./nvr_video";
 
@@ -72,16 +72,40 @@ class Nvr {
     PtzMoveParams: PtzMoveParams,
     timeoutCustom?: number
   ) {
-    return await this._Cams.move(idcam, PtzMoveParams, timeoutCustom);
+    let _response: returnData<boolean> = { msg: '', inError: false }
+    try {
+      _response.dataResult = await this._Cams.move(idcam, PtzMoveParams, timeoutCustom);
+      return _response
+    } catch (e) {
+      _response.inError = true
+      _response.msg = (e as Error).message
+    }
   }
 
   async screenshot(idCam: string) {
-    return this._Cams.screenshot(idCam);
+    let _response: returnData<Buffer> = { msg: '', inError: false }
+    try {
+      let respSnap: Snapshot = await this._Cams.screenshot(idCam);
+      _response.dataResult = respSnap.body
+      return _response
+    } catch (e) {
+      _response.inError = true
+      _response.msg = (e as Error).message
+      return _response
+    }
   }
 
 
   stopCam(idCam: string) {
-    return this._Cams.stopCam(idCam);
+    let _response: returnData<boolean> = { msg: '', inError: false }
+    try {
+      _response.dataResult = this._Cams.stopCam(idCam);
+      return _response
+    } catch (e) {
+      _response.inError = true
+      _response.msg = (e as Error).message
+      return _response
+    }
   }
 
 
@@ -90,11 +114,27 @@ class Nvr {
     presetN: string,
     speed?: { x: number; y: number; z: number }
   ) {
-    return await this._Cams.presetCam(idcam, presetN, speed);
+    let _response: returnData<boolean> = { msg: '', inError: false }
+    try {
+      _response.dataResult = await this._Cams.presetCam(idcam, presetN, speed);
+      return _response
+    } catch (e) {
+      _response.inError = true
+      _response.msg = (e as Error).message
+      return _response
+    }
   }
 
   async presetCamSave(idcam: string, presetN: string) {
-    return await this._Cams.savePreset(idcam, presetN);
+    let _response: returnData<boolean> = { msg: '', inError: false }
+    try {
+      _response.dataResult = await this._Cams.savePreset(idcam, presetN);
+      return _response
+    } catch (e) {
+      _response.inError = true
+      _response.msg = (e as Error).message
+      return _response
+    }
   }
 
 
@@ -122,7 +162,6 @@ class Nvr {
     return this._Users.list;
   }
 
-  /** nuova implementazione stream cam to websocket client */
 
   streamCam(idCam: string, ws: WebSocketClient, token: string) {
     let url_cam: string = this._Cams.urlRTSPStream(idCam);
@@ -148,7 +187,7 @@ class Nvr {
       }
     });
 
-    // necessario altrimenti si riempe il buffer ( stderr buffer exceeds 24kb you must be reading)
+    // ( stderr buffer exceeds 24kb you must be reading)
     //https://stackoverflow.com/questions/20792427/why-is-my-node-child-process-that-i-created-via-spawn-hanging
     ffmpegNew.stderr.on("data", function (data) { });
     ffmpegNew.stdout.on("close", (code: number, signal: string) => {
@@ -175,9 +214,7 @@ class Nvr {
     );
   }
 
-  /** fine nuova implementazione stream cam to websocket client */
 
-  /**Nuova gestione PushWeb --- note:versione precedente: NotifySubscriptionUserWeb */
   async NotifySubscriptionUser(token: string, typeSubscription: any, subscription_client: ISubscription) {
     //verificare prima se lo user ha già registrato il suo brouser
     try {
@@ -189,52 +226,54 @@ class Nvr {
   }
 
 
-
-  /** Fine Nuova gestione PushWeb  */
-
-  /** Nuova Implementazione setCamOption */
   async setCamOption(idCam: string, NameOption: nameCamOption, data: any, checkOnly = false) {
-    return await this._Cams.setCamOption(idCam, NameOption, data, checkOnly);
+    let _response: returnData<boolean> = { msg: '', inError: false }
+    _response.dataResult = await this._Cams.setCamOption<boolean>(idCam, NameOption, data, checkOnly);
+    return _response
   }
 
-  /** fine Nuova Implementazione setCamOption */
 
-
-  // Nuova implementazione Getione Alarm
-  // #TODO da mettere in managerAlarm in nvr_cams.ts (vedere descrizione in function managerAlarm)
 
   async managerAlarms(nameOptions: alarmMethod, idCam: string = '', dataFilter: string, idAlarm: string) {
     return await this._Cams.managerAlarm(nameOptions, idCam, dataFilter, idAlarm)
   }
 
-  // Fine Nuova implementazione Getione Alarm
 
-
-
-  //#endregion
-
-
-  /** Nuova Implementazione Setup Radar Cams */
-  async managerRadarCams(nameMethod: radarMethod, radarCam?: iradarCam) {
-
-    let responseReturn = { inError: false, msg: '' } as returnData<iradarCam[] | nvr_cam[]>
+  async RadarCams(): Promise<returnData<iradarCam[]>> {
+    let _response: returnData<iradarCam[]> = { msg: '', inError: false }
     try {
-      if (!this._blockPublicAllConnection) {
-        throw new Error('First block public access')
-      }
-      responseReturn.dataResult = await this._Cams.managerRadarCams(nameMethod, radarCam)
-      responseReturn.inError = false
-      this.logger.log('🚀 ~ file: nvr.ts ~ line 325 ~ Nvr ~ managerRadarCams ~ x', responseReturn)
-      //return x
-      return responseReturn
+      /*  if (!this._blockPublicAllConnection) { // TODO: rem for debug 
+         // throw new Error('First block public access')
+         _response.inError = true
+         _response.msg = 'Block access public ip'
+         return _response
+       } */
+      _response.dataResult = await this._Cams.RadarCams()
+      console.log('🚀 ~ file: nvr.ts ~ line 249 ~ Nvr ~ RadarCams ~ _response:', _response)
+      return _response
     } catch (error) {
-      responseReturn.inError = true
-      responseReturn.msg = error.message
-      return responseReturn
+      _response.inError = true
+      _response.msg = error.message
+      return _response
     }
-
   }
-  /** Fine Nuova Implementazione Setup Radar Cams */
+
+  async saveRadarCam(radarCam?: iradarCam): Promise<returnData<boolean>> {
+    let _response: returnData<boolean> = { msg: '', inError: false }
+    try {
+      _response.dataResult = await this._Cams.saveCam(radarCam, true)
+      if (!_response.dataResult) {
+        _response.inError = true
+        _response.msg = 'error save probe cam'
+      }
+      return _response
+    } catch (error) {
+      _response.inError = true
+      _response.msg = error.message
+      return _response
+    }
+  }
+
 
 
 }
