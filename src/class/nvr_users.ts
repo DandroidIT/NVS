@@ -241,18 +241,18 @@ class users {
 
   async update(
     username: string,
-    pass: string,
-    usernameNew: string,
-    passNew: string
+    password: string,
+    newUsername: string,
+    newPassword: string
   ) {
     let user = await configBase.db.tabUsers.findOne({
       username: username,
-      password: pass,
+      password: password,
     });
     if (user) {
       let checkUserNew = await configBase.db.tabUsers.update(
-        { username: usernameNew },
-        { password: passNew }
+        { username: newUsername },
+        { password: newPassword }
       );
       return checkUserNew ? true : false;
     }

@@ -76,6 +76,8 @@ let _wsEventBind = (ws: WebSocketClient, request: IncomingMessage) => {
 	ws.on(nvrCtrl.nvrEvent.RadarCams, async () => ws.send(await nvrCtrl.radarCams()))
 	ws.on(nvrCtrl.nvrEvent.saveRadarCam, async (data) => ws.send(await nvrCtrl.saveRadarCam(data)))
 
+	ws.on(nvrCtrl.nvrEvent.updateUser, async (data) => ws.send(await nvrCtrl.updateUser(data)))
+
 	ws.on(nvrCtrl.nvrEvent.logoutUser, async (data) => ws.send(nvrCtrl.logoutUser(data)))
 
 }

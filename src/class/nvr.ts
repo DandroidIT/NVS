@@ -274,6 +274,30 @@ class Nvr {
     }
   }
 
+  async updateUser(
+    username: string,
+    password: string,
+    newUsername: string,
+    newPassword: string
+  ) {
+    let _response: returnData<boolean> = { msg: '', inError: false }
+    try {
+      _response.dataResult = await this._Users.update(username, password, newUsername, newPassword);
+      if (!_response.dataResult) {
+        _response.inError = true
+        _response.msg = 'update User error!!!'
+      } else {
+        _response.msg = 'update User successfully'
+      }
+      return _response
+
+    } catch (error) {
+      _response.inError = true
+      _response.msg = 'update User catch error!!!'
+    }
+
+  }
+
 
 
 }

@@ -14,6 +14,7 @@ enum NvrEventName {
   SetOption = "nvr_set_option",
   RadarCams = "radarcams",
   saveRadarCam = "saveradarcam",
+  updateUser = 'userupdate',
   logoutUser = 'logout'
 }
 
@@ -102,6 +103,12 @@ class NvrWsController {
     let res = await Nvr.saveRadarCam(cam)
     return JSON.stringify({ type: this.nvrEvent.saveRadarCam, payload: res })
 
+  }
+
+  public static async updateUser(rawdata: string) {
+    let { username, password, newUsername, newPassword } = JSON.parse(rawdata).payload
+    let checkUpdate = await Nvr.updateUser(username, password, newUsername, newPassword)
+    return JSON.stringify({ type: this.nvrEvent.updateUser, payload: checkUpdate })
   }
 
 }
