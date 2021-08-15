@@ -3,6 +3,7 @@ import { connect, Model, Trilogy, } from "trilogy";
 import * as knex from 'knex';
 import fs from "fs";
 import { NoLogger } from '../lib/no-logger'
+import { mycrypt } from '../lib/helper'
 import env_dev from './env_dev';
 const logger = new NoLogger('configbase', true)
 logger.log('log for configbase')
@@ -164,6 +165,33 @@ class db {
       return false;
 
     }
+  }
+
+  async getUser(username: string, password: string) {
+    const u = await this._tabUsers.findOne({ username: username });
+    if (u) {
+      const checkcompare = await mycrypt.comparetext(password, u.password.toString())
+      if (checkcompare === true) {
+        return u
+      }
+
+    }
+  }
+  async saveUser(username: string, password: string, newUsername: string, newPassword: string) {
+    if (username !== newUsername) {
+      let dbUser = await this._tabUsers.findOne({ username: username })
+      if (dbUser) {
+        return false
+      }
+    }
+    if (!this.getUser(username, password))
+      return false
+
+    let save = await this._tabUsers.update(
+      { username: username },
+      { username: newUsername, password: await mycrypt.hashtext(newPassword) }
+    );
+    return save.length === 0 ? false : true
   }
 
   async logAlarms_setQuery(query: string, arrParam: Array<any> = [], dist: string = '', column: Array<string> = [], count: string = '') {

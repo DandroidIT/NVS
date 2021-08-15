@@ -6,7 +6,7 @@ import { nanoId, helpers, helpJwt } from '../lib/helper'
 import { ISubscription, IUser, typeWS, loginResponse } from './interface'
 import { WebPushError, SendResult } from "web-push";
 
-class users {
+class nvrUsers {
 
   private _listUsers: Map<string, IUser> = new Map();
   logger: NoLogger
@@ -152,26 +152,23 @@ class users {
   }
 
   async login(username: string, pass: string, ip: string): Promise<loginResponse> {
-    let dbUuser = await configBase.db.tabUsers.findOne({
-      username: username,
-      password: pass,
-    });
-    if (dbUuser) {
+    let dbUser = await configBase.db.getUser(username, pass)
+    if (dbUser) {
       let getData = helpers.date.dateString();
       let token = helpJwt.getToken(
-        { id: `${dbUuser.id!}`, create_at: getData },
+        { id: `${dbUser.id!}`, create_at: getData },
         configBase.secret,
         { expiresIn: "1d" }
       );
 
-      if (this.filter(dbUuser.id!.toString())) {
-        let U = this.filter(dbUuser.id.toString())
+      if (this.filter(dbUser.id!.toString())) {
+        let U = this.filter(dbUser.id.toString())
         this.logout(U.token)
         return { success: false, token: '' }
       }
 
       this.Add({
-        id: dbUuser.id!.toString(),
+        id: dbUser.id!.toString(),
         idconnect: nanoId.getId(),
         ip: ip,
         username: username,
@@ -179,8 +176,10 @@ class users {
         last_connect: getData,
         ws_list: new Map()
       });
+      this.logger.log(`Login Success - username:${username} ip:${ip}`)
       return { success: true, token: token }
     } else {
+      this.logger.log(`Login Fail - username:${username} password:${pass} ip:${ip}`)
       return { success: false, token: '' }
     }
 
@@ -245,16 +244,10 @@ class users {
     newUsername: string,
     newPassword: string
   ) {
-    let user = await configBase.db.tabUsers.findOne({
-      username: username,
-      password: password,
-    });
-    if (user) {
-      let checkUserNew = await configBase.db.tabUsers.update(
-        { username: newUsername },
-        { password: newPassword }
-      );
-      return checkUserNew ? true : false;
+    let dbUser = await configBase.db.getUser(username, password)
+    if (dbUser) {
+      let checkUserNew = await configBase.db.saveUser(username, password, newUsername, newPassword)
+      return checkUserNew
     }
 
     return false;
@@ -263,4 +256,4 @@ class users {
 
 }
 
-export { users }
+export { nvrUsers }

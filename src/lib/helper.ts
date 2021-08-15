@@ -2,6 +2,7 @@ import Jimp from 'jimp';
 import jwt from "jsonwebtoken";
 import { nanoid } from 'nanoid';
 import ip_private from 'private-ip';
+import { hash, compare } from 'bcryptjs'
 
 
 export namespace nanoId {
@@ -118,5 +119,14 @@ export namespace helpJwt {
   }
   export function decodeToken(token: string, options?: jwt.DecodeOptions | undefined) {
     return jwt.decode(token, options)
+  }
+}
+
+export namespace mycrypt {
+  export const hashtext = async (text: string) => {
+    return await hash(text, 10)
+  }
+  export const comparetext = async (text, hash: string) => {
+    return await compare(text, hash)
   }
 }

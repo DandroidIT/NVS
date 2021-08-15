@@ -1,13 +1,11 @@
 import { spawn } from "child_process";
 import { PtzMoveParams, Snapshot } from "node-onvif-ts";
 import { WebSocketClient } from "ws";
-import configBase from "../config";
 import { helpers } from "../lib/helper";
 import { NoLogger } from "../lib/no-logger";
 import { iradarCam, IstreamFFMPEGCam, ISubscription, loginResponse, optNameNvr, returnData, typeWS } from "./interface";
-import { nvr_cam } from './nvr_cam';
 import { alarmMethod, cams, nameCamOption } from "./nvr_cams";
-import { users as nvrUsers } from "./nvr_users";
+import { nvrUsers } from "./nvr_users";
 import { ffmpegOpt } from "./nvr_video";
 
 
@@ -16,12 +14,9 @@ class Nvr {
 
   logger: NoLogger;
   _blockPublicAllConnection = false;
-  private _listCam: Array<nvr_cam> = [];
   private _Cams = new cams();
   private _ffmpegList = new Array<IstreamFFMPEGCam>();
   private _Users = new nvrUsers();
-  private _configBase = configBase;
-
 
   constructor() {
     this.logger = new NoLogger("nvr", true);
@@ -216,7 +211,7 @@ class Nvr {
 
 
   async NotifySubscriptionUser(token: string, typeSubscription: any, subscription_client: ISubscription) {
-    //verificare prima se lo user ha già registrato il suo brouser
+    //verificare prima se lo user ha già registrato il suo browser
     try {
       return await this._Users.managerPush(token, typeSubscription, subscription_client)
     } catch (error) {
@@ -285,15 +280,15 @@ class Nvr {
       _response.dataResult = await this._Users.update(username, password, newUsername, newPassword);
       if (!_response.dataResult) {
         _response.inError = true
-        _response.msg = 'update User error!!!'
+        _response.msg = 'User update error!!!'
       } else {
-        _response.msg = 'update User successfully'
+        _response.msg = 'User update successfully'
       }
       return _response
 
     } catch (error) {
       _response.inError = true
-      _response.msg = 'update User catch error!!!'
+      _response.msg = 'User update catch error!!!'
     }
 
   }
