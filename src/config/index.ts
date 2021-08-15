@@ -178,14 +178,15 @@ class db {
     }
   }
   async saveUser(username: string, password: string, newUsername: string, newPassword: string) {
+    if (!this.getUser(username, password))
+      return false
+
     if (username !== newUsername) {
-      let dbUser = await this._tabUsers.findOne({ username: username })
+      let dbUser = await this._tabUsers.findOne({ username: newUsername })
       if (dbUser) {
         return false
       }
     }
-    if (!this.getUser(username, password))
-      return false
 
     let save = await this._tabUsers.update(
       { username: username },

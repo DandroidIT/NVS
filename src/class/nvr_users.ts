@@ -244,13 +244,8 @@ class nvrUsers {
     newUsername: string,
     newPassword: string
   ) {
-    let dbUser = await configBase.db.getUser(username, password)
-    if (dbUser) {
-      let checkUserNew = await configBase.db.saveUser(username, password, newUsername, newPassword)
-      return checkUserNew
-    }
 
-    return false;
+    return await configBase.db.saveUser(username, password, newUsername, newPassword)
   }
 
 
