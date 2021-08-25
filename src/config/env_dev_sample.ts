@@ -8,12 +8,13 @@ export default {
   ip: '192.168.1.1',
   port: 4004,
   database: 'storage.db',
-  secret: "secretstring",
+  secret: 'secretstring',
+  tokenExpiresIn: '1d',
   cams: [{
-    xaddr: "http://192.168.1.10:8999/onvif/device_service",
+    xaddr: 'http://192.168.1.10:8999/onvif/device_service',
     urn: 'urn:uuid:abc-xxxx-axxx-xxx-xxxabcxxxx',
-    name: "demo cam",
-    username: "admin",
-    password: "password",
+    name: 'demo cam',
+    username: 'admin',
+    password: 'password',
   }]
 }

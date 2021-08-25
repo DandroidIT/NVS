@@ -281,14 +281,17 @@ class Nvr {
       if (!_response.dataResult) {
         _response.inError = true
         _response.msg = 'User update error!!!'
+        this.logger.log(`updateUser error username: ${username} newUsername: ${newUsername}`)
       } else {
         _response.msg = 'User update successfully'
+        this.logger.log(`updateUser successfully username: ${username} newUsername: ${newUsername}`)
       }
       return _response
 
     } catch (error) {
       _response.inError = true
       _response.msg = 'User update catch error!!!'
+      this.logger.log(`updateUser catch error username: ${username} newUsername: ${newUsername}`)
     }
 
   }

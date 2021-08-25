@@ -2,6 +2,7 @@ node_modules
 ssl
 out
 storecams
+logs
 src/config/env_dev.ts
 src/class/webpush.ts
 src/client

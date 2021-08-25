@@ -24,6 +24,7 @@ class configBase {
   public AppClient = { start: env_dev.serversStatic, folder: env_dev.serversStaticFolder, route: env_dev.serversStaticRoute }
 
   public secret = env_dev.secret
+  public tokenExpiresIn = env_dev.tokenExpiresIn
   public namedb = env_dev.database
   public folderForCams = efolder
   private _db = new db(this.namedb);

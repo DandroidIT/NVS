@@ -5,6 +5,7 @@ import configBase, { model_notify_user } from "../config";
 import { nanoId, helpers, helpJwt } from '../lib/helper'
 import { ISubscription, IUser, typeWS, loginResponse } from './interface'
 import { WebPushError, SendResult } from "web-push";
+import { TokenExpiredError } from 'jsonwebtoken';
 
 class nvrUsers {
 
@@ -101,34 +102,35 @@ class nvrUsers {
     }
   }
 
-  setWS(ws: WebSocketClient, protocol: string, type: typeWS, tagid: string = ''): boolean {
+  setWS(ws: WebSocketClient, protocol: string, type: typeWS, tagid: string = '') {
     let user: IUser = this.verifyUserToken(protocol)
     if (user) {
-      this.logger.log(`${user.username}: setWS`)
       user.ws_list?.set(ws.idConnect, { type: type, tagid: tagid, ws: ws })
       if (type === 'api') {
         ws.online = true
         ws.on("close", (code: number, reason: string) => {
-          this.logger.log(`NvrWsController InitClient : CLOSE API Client disconnected user.id: ${user?.id} user.idconnect:${user?.idconnect} ws.idConnect:${ws.idConnect} - reason: ${reason} code: ${code}`);
-          this.logout(protocol, true)
+          this.logger.log(`setWS type: ${type} disconnected - user.id: ${user?.id} user.idconnect:${user?.idconnect} ws.idConnect:${ws.idConnect} - reason: ${reason} code: ${code}`);
+          //this.logout(protocol, true)
+          this.logoutAndDestroy(user.id)
         })
       } else if (type === 'stream') {
         ws.binaryType = "arraybuffer";
         ws.send(this.streamHeaders(), { binary: true });
 
         ws.on("error", (err) => {
-          this.logger.err(`streamCam_test ws onerror error:${err}`);
+          this.logger.err(`setWS type: ${type} ws.onerror error:${err}`);
           this.removeWS(user?.id!, ws.idConnect);
         });
         ws.on("close", (code: number, reason: string) => {
-          this.logger.log(
-            `streamCam_test ws onclose reason:${reason} code:${code}`
-          );
+          this.logger.log(`setWS type: ${type} disconnected - user.id: ${user?.id} user.idconnect:${user?.idconnect} ws.idConnect:${ws.idConnect} - reason: ${reason} code: ${code}`);
           this.removeWS(user?.id!, ws.idConnect);
         });
       }
+
+      this.logger.log(`setWS: user: ${user.username} user.ws_list.size: ${user.ws_list.size}`)
     }
-    return true
+
+
   }
 
   removeWS(idUser: string, wsIdConect: string) {
@@ -152,20 +154,17 @@ class nvrUsers {
   }
 
   async login(username: string, pass: string, ip: string): Promise<loginResponse> {
-    let dbUser = await configBase.db.getUser(username, pass)
+    const dbUser = await configBase.db.getUser(username, pass)
     if (dbUser) {
+      if (this.logoutAndDestroy(dbUser.id!.toString())) {
+        return { error: 'user logout, please reload and login', success: false, token: '' }
+      }
       let getData = helpers.date.dateString();
       let token = helpJwt.getToken(
         { id: `${dbUser.id!}`, create_at: getData },
         configBase.secret,
-        { expiresIn: "1d" }
+        { expiresIn: configBase.tokenExpiresIn }
       );
-
-      if (this.filter(dbUser.id!.toString())) {
-        let U = this.filter(dbUser.id.toString())
-        this.logout(U.token)
-        return { success: false, token: '' }
-      }
 
       this.Add({
         id: dbUser.id!.toString(),
@@ -203,11 +202,37 @@ class nvrUsers {
     return false
   }
 
+  logoutAndDestroy(idUser: string) {
+    const user = this.filter(idUser);
+    if (user) {
+      if (user.ws_list.size) {
+        user.ws_list.forEach(wsUser => {
+          wsUser.ws.terminate()
+        });
+
+      }
+      this.remove(user.id)
+      this.logger.log(`logoutAndDestroy username:${user.username} this._listUsers.size: ${this._listUsers.size}`)
+      return true
+    }
+    return false
+  }
+
 
   verifyUserToken(authToken: string) {
-    helpJwt.verifyToken(authToken, configBase.secret, { complete: true });
-    let u = helpJwt.decodeToken(authToken, { complete: true }) as any;
-    return this.filter(u.payload.id);
+    try {
+      helpJwt.verifyToken(authToken, configBase.secret, { complete: true });
+      const u = helpJwt.decodeToken(authToken, { complete: true }) as any;
+      return this.filter(u.payload.id);
+    } catch (error: unknown) {
+      if (error instanceof TokenExpiredError) {
+        this.logger.err(`verifyUserToken catch TokenExpiredError: ${error.message} expiredAt: ${error.expiredAt}`);
+      } else {
+        this.logger.err(`verifyUserToken catch: ${error}`);
+      }
+      return undefined
+    }
+
   }
 
   sendVideo(idCam: string, chunk: any) {

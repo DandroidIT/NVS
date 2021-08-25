@@ -88,14 +88,13 @@ export function wsStreamRouter(wsClient: WebSocketClient, request: IncomingMessa
 
 export function checkToken(request: IncomingMessage): boolean {
 	try {
-		logger.log('sec-websocket-protocol:', request.headers['sec-websocket-protocol'])
 		let u = _Nvr.verifyUser(request.headers['sec-websocket-protocol']!)
 		if (u === undefined) {
-			logger.err(`"checkToken user not found: ${request.headers['sec-websocket-protocol']}`)
-			logger.w(`"checkToken user not found: ${request.headers['sec-websocket-protocol']}`)
-			throw new Error("checkToken user not found");
-
+			logger.err(`checkToken not valid socket.remoteAddress: ${request.socket.remoteAddress} url: ${request.url} token: ${request.headers['sec-websocket-protocol']}`)
+			logger.w(`checkToken not valid socket.remoteAddress: ${request.socket.remoteAddress} url: ${request.url} token: ${request.headers['sec-websocket-protocol']}`)
+			return false
 		}
+		logger.log('sec-websocket-protocol IS VALID:', request.headers['sec-websocket-protocol'])
 		return true;
 	} catch (error) {
 		return false

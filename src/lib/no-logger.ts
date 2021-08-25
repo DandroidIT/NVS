@@ -48,6 +48,9 @@ export class NoLogger {
     const defName = `${this.scope}_log.txt`
     this.filePath = `${process.cwd()}/logs/${defName}`
     if (!writeFile) return
+    if (!fs.existsSync(`${process.cwd()}/logs/`)) {
+      fs.mkdirSync(`${process.cwd()}/logs/`)
+    }
     this.w('Log Start')
   }
   private _writeFile(message: string): void {

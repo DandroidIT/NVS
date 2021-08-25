@@ -12,7 +12,7 @@ class Nvr_ws {
 	private _wsServerStream!: Server
 	private _wsServerEvent!: Server
 	constructor() {
-		this.logger = new NoLogger('Nvr_ws load')
+		this.logger = new NoLogger('Nvr_ws')
 	}
 
 	Start(httpsServer: https.Server | http.Server) {
@@ -32,11 +32,11 @@ class Nvr_ws {
 			return;
 		}
 		if (!checkToken(request)) {
-			this.logger.err('NO TOCKEN')
 			socket.end('HTTP/1.1 400 Bad Request');
+			socket.destroy()
 			return;
 		}
-		this.logger.log(`svrUpgrade: upgrade server ip:${request.socket.remoteAddress}`)
+
 		let getRoute: string[] = []
 		if (request.url?.split('/'))
 			getRoute = request.url?.split('/')
