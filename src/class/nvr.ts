@@ -35,15 +35,19 @@ class Nvr {
   }
 
   setOptions(typeOption: optNameNvr, data: any, checkOnly = false) {
+    let _response: returnData<boolean> = { msg: '', inError: false }
     try {
       if (typeOption === 'ipblock') {
         if (checkOnly !== true) {
           this._blockPublicAllConnection = !this._blockPublicAllConnection
         }
-        return this._blockPublicAllConnection
+        _response.dataResult = this._blockPublicAllConnection
+        return _response
       }
     } catch (error) {
-      return false
+      _response.inError = true
+      _response.msg = 'Nvs setOptions catch error'
+      return _response
     }
 
   }
@@ -237,14 +241,13 @@ class Nvr {
   async RadarCams(): Promise<returnData<iradarCam[]>> {
     let _response: returnData<iradarCam[]> = { msg: '', inError: false }
     try {
-      /*  if (!this._blockPublicAllConnection) { // TODO: rem for debug 
-         // throw new Error('First block public access')
-         _response.inError = true
-         _response.msg = 'Block access public ip'
-         return _response
-       } */
+      if (!this._blockPublicAllConnection) {
+        // throw new Error('First block public access')
+        _response.inError = true
+        _response.msg = 'First block access to public ip'
+        return _response
+      }
       _response.dataResult = await this._Cams.RadarCams()
-      console.log('🚀 ~ file: nvr.ts ~ line 249 ~ Nvr ~ RadarCams ~ _response:', _response)
       return _response
     } catch (error) {
       _response.inError = true

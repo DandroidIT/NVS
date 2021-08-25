@@ -11,7 +11,7 @@ logger.log('Start log for NvrWsController')
 enum NvrEventName {
   PONG = 'pong',
   ManagerPush = 'push_manager',
-  SetOption = "nvr_set_option",
+  SetOptions = "set_options",
   RadarCams = "radarcams",
   saveRadarCam = "saveradarcam",
   updateUser = 'userupdate',
@@ -90,7 +90,7 @@ class NvrWsController {
   static SetOptions(rawdata: any) {
     let { typeOption, data, checkOnly } = JSON.parse(rawdata).payload
     let checkOption = Nvr.setOptions(typeOption, data, checkOnly)
-    return JSON.stringify({ type: this.nvrEvent.SetOption, payload: checkOption })
+    return JSON.stringify({ type: this.nvrEvent.SetOptions, payload: checkOption })
   }
 
   static async radarCams() {

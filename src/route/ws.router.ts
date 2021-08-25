@@ -69,7 +69,7 @@ let _wsEventBind = (ws: WebSocketClient, request: IncomingMessage) => {
 	ws.on(camCtrl.camEvent.CamSetOption, async (data) => ws.send(await camCtrl.SetCamOption(data), () => { }))
 
 	ws.on(nvrCtrl.nvrEvent.ManagerPush, async (data) => ws.send(await nvrCtrl.managerPush(data)))
-	ws.on(nvrCtrl.nvrEvent.SetOption, async (data) => ws.send(await nvrCtrl.SetOptions(data)))
+	ws.on(nvrCtrl.nvrEvent.SetOptions, async (data) => ws.send(await nvrCtrl.SetOptions(data)))
 
 	ws.on(camCtrl.camEvent.ManagerAlarms, async (data) => ws.send(await camCtrl.managerAlarms(data)))
 
