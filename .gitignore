@@ -1,6 +1,7 @@
 node_modules
 ssl
-out
+out/*
+!out/webclient/
 storecams
 logs
 src/config/env_dev.ts
