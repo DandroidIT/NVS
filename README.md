@@ -38,13 +38,19 @@ npm install
 `src/config/env_dev_sample.ts` in `src/config/env_dev.ts`
 ```
 
-4. Start
+4. create ssl certificate
+
+```sh
+mkcert https://github.com/FiloSottile/mkcert
+```
+
+6. Start
 
 ```sh
 npm start
 ```
 
-5. Enjoy
+6. Enjoy
 
 ```sh
 Open browser https://192.168.1.1:4004
