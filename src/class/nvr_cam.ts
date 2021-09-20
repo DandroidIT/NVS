@@ -27,6 +27,7 @@ class nvr_cam {
   public set recordingH24(value: boolean) {
     this._recordingH24 = value
   }
+  private _delayForPtzN: boolean
   private _liveMotion: boolean = false
   public get liveMotion(): boolean {
     return this._liveMotion
@@ -60,8 +61,6 @@ class nvr_cam {
 
 
   async InitCam(recordH24: boolean, motionsAlert: boolean) {
-    //finire init test
-
     try {
       this.information = await this.camRX.init()
 
@@ -71,7 +70,6 @@ class nvr_cam {
         this._recordingH24 = recordH24
         this._liveMotion = motionsAlert
         this.recordingContinuos()
-        this.liveMotionV1()
         this.inError = false
         return true
       } else {
@@ -179,12 +177,22 @@ class nvr_cam {
   }
 
 
-  async liveMotionV1() {
-    console.log('🚀 liveMotionV1 ~  this.inMove', this.inMove)
-    if (!this._liveMotion || this.inMove === true) {
+  async liveMotionV2() {
 
-      return
+    if (!this._liveMotion) { return }
+    this.logger.log(`liveMotionV2 start cam id: ${this.id}`)
+    while (this._liveMotion) {
+      const checkmotion = await this.checkMotionDetected()
+      if (checkmotion.inError) {
+        this.logger.log(`liveMotionV2 error after checkMotionDetected() checkmotion.inError: ${checkmotion.inError}`)
+        this.logger.w(`liveMotionV2 error after checkMotionDetected() checkmotion.inError: ${checkmotion.inError}`)
+      } else {
+        //this.logger.log('liveMotionV2 checkMotionDetected ok checkmotion: ', checkmotion)
+      }
     }
+  }
+
+  async checkMotionDetected(): Promise<{ inError: boolean, endcheck: boolean }> {
     try {
       let arr: Buffer[] = []
       let arrSnap1 = await this.getScreenshotN()
@@ -192,25 +200,24 @@ class nvr_cam {
       if (arrSnap1 && arrSnap2) {
         arr.push(arrSnap1.body)
         arr.push(arrSnap2.body)
+        if (this.inMove) { return { inError: false, endcheck: true } }
         let isMotion = await this._diffRilevateV1(arr)
-        if (isMotion.inAlarm) {
+        if (isMotion.inAlarm && !this.inMove) {
           let alarm = await configBase.db.tabLogAllarms.create({ idcam: this.id, datarif: isMotion.arrImg.join('|'), stamptime: helpers.date.dateISOLocate(), msg: 'ALLARME liveMotionV1' })
           this.logger.log(`${helpers.date.dateString()} ALLARM CAM ${this.nameCam} idalarm:${alarm?.id}`)
           this.logger.w(`${helpers.date.dateString()} ALLARM CAM ${this.nameCam} idalarm:${alarm?.id}`)
-          this._emitAlarm(`${helpers.date.dateString()} ALLARM CAM ${this.nameCam} idalarm:${alarm?.id} link: <a href='/#/dettalarm/18/${alarm?.id}'>link</a>`)
-        } else {
-
+          this._emitAlarm(`${helpers.date.dateString()} ALLARM CAM ${this.nameCam} idalarm:${alarm?.id} link: <a href='/#/${this.id}/${alarm?.id}'>link</a>`)
         }
+        return { inError: false, endcheck: true }
       } else {
-        this.logger.log(`liveMotionV1 ~ arrSnap1 && arrSnap2 ERROR UNDEFINED CAM ${this.nameCam}`)
-        this.logger.w(`liveMotionV1 ~ arrSnap1 && arrSnap2 ERROR UNDEFINED CAM ${this.nameCam}`)
+        this.logger.log(`checkMotionDetected ~ arrSnap1 && arrSnap2 ERROR UNDEFINED CAM ${this.nameCam}`)
+        this.logger.w(`checkMotionDetected ~ arrSnap1 && arrSnap2 ERROR UNDEFINED CAM ${this.nameCam}`)
+        return { inError: true, endcheck: false }
       }
-
-      this.liveMotionV1()
     } catch (error) {
-      this.logger.err(`liveMotionV1 error ${error} - CAM ${this.nameCam}`)
-      this.logger.w(`liveMotionV1 error ${error} - CAM ${this.nameCam}`)
-      this.liveMotionV1()
+      this.logger.err(`checkMotionDetected error ${error} - CAM ${this.nameCam}`)
+      this.logger.w(`checkMotionDetected error ${error} - CAM ${this.nameCam}`)
+      return { inError: true, endcheck: false }
     }
   }
 
@@ -220,7 +227,8 @@ class nvr_cam {
       let img2 = await Jimp.read(arrB[1])
       let distance = Jimp.distance(img1, img2); // perceived distance
       let different = Jimp.diff(img1, img2, 0.2);
-      if (different.percent > 0.02 || distance > 0.02) { // TODO: una cartella per evento allarme
+      if (this.inMove) { return { inAlarm: false, arrImg: [] } }
+      if (different.percent > 0.02 || distance > 0.02) {
         let img1Name = this._pathElaborate('.', true) + `/motion1_${helpers.date.dateFULLString()}.jpg`
         let img2Name = this._pathElaborate('.', true) + `/motion2_${helpers.date.dateFULLString()}.jpg`
         img1.resize(800, Jimp.AUTO).write(img1Name)
@@ -229,9 +237,6 @@ class nvr_cam {
       } else {
         return { inAlarm: false, arrImg: [] }
       }
-      /*  arrB.map((buff)=>{
-         console.log('🚀 ~ file: cam.ts ~ line 133 ~ Cam ~ arrB.forEach ~ buff', buff)
-       })     */
     } catch (error) {
       return { inAlarm: false, arrImg: [] }
     }
@@ -249,28 +254,30 @@ class nvr_cam {
   ptzStopN() {
     if (this.asPtz === false)
       return
-    this.camRX.ptzStop().then((res) => {
-      this.logger.log('🚀 ~ file: cam.ts ~ line 105 ~ ptzStop!!!!!!!!!!!!!:', res)
-
-    })
+    return this._stopCam()
   }
 
+  async _stopCam(timeoutCustom?: number): Promise<boolean> {
+    const timeout = timeoutCustom === undefined ? 500 : timeoutCustom
+    await helpers.delay(timeout)
+    await this.camRX.ptzStop()
+    return true
+  }
   async ptzN(xyz: PtzMoveParams, timeoutCustom?: number): Promise<boolean> {
     return new Promise(async (res, rej) => {
       if (this.asPtz === false) { rej(false) }
-      let stopCam = async () => {
-        setTimeout(() => {
-          this.camRX.ptzStop()
-          this.logger.log(`stopCam in ${timeoutCustom}`);
-          res(true)
-        }, timeoutCustom === undefined ? 500 : timeoutCustom) //, )
-      }
+      const timeout = timeoutCustom === undefined ? 500 : timeoutCustom
       try {
+        this._delayForPtzN = this.inMove
         this.inMove = true
-        xyz.timeout = xyz.timeout === undefined ? 1 : xyz.timeout
+        xyz.timeout = timeout
         await this.camRX.ptzMove(xyz)
-        await stopCam()
-        this.inMove = false
+        await this._stopCam(timeout)
+        helpers.delay(3000).then(() => {
+          if (!this._delayForPtzN) { this.inMove = false }
+          this._delayForPtzN = false
+          res(true)
+        })
       } catch (error: any) {
         this.logger.err(`Cam -> ptz -> error ${this.ip} message ${error.message}`)
         this.inMove = false
@@ -282,20 +289,19 @@ class nvr_cam {
   }
 
   async gotoPresetN(presetN: string, speed?: { x: number, y: number, z: number }) {
-    console.log('🚀 gotoPresetN ~ this.inMove', this.inMove)
     if (this.asPtz === false) { return false }
     try {
       this.inMove = true
-      let preset: GotoPresetParams = {
+      const preset: GotoPresetParams = {
         ProfileToken: this._getProfile().token,
         PresetToken: presetN,
         Speed: speed!
       }
-      let check = await this.camRX.services.ptz?.gotoPreset(preset)
-      this.inMove = false
+      const check = await this.camRX.services.ptz?.gotoPreset(preset)
+      helpers.delay(8000).then(() => this.inMove = false)
       return check === undefined ? false : true
     } catch (error) {
-      this.logger.err('cam.ts ~ line 119 ~ Cam ~ gotoPreset ~ error', error)
+      this.logger.err('gotoPresetN ~ error', error)
       this.inMove = false
       return false
     }

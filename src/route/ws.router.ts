@@ -46,8 +46,8 @@ let _wsToEvent = (message: any, _ws: WebSocketClient, request: IncomingMessage) 
 		}
 		let { type, payload } = JSON.parse(message)
 		_ws.emit(type, payload, _path || message)
-		if (type !== 'ping' && type !== 'pong')
-			logger.log(`wsEventRoute _wsToEvent OK emit  message: ${message} _path: ${_path}`)
+		//if (type !== 'ping' && type !== 'pong')
+		// logger.log(`wsEventRoute _wsToEvent OK emit  message: ${message} _path: ${_path}`)
 
 	} catch (error) {
 		logger.err(`wsEventRoute _wsToEvent error   message: ${message} _path: ${_path}`)

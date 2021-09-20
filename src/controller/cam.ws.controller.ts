@@ -21,7 +21,6 @@ class CamWsController {
   public static camEvent = CamEventName
 
   public static async move(data: any): Promise<string> {
-    logger.log('CamWsController ~ move ~ data', data)
     try {
       let { cmd, tagcam, speed, timeout, preset } = JSON.parse(data).payload
       let checkCommand: returnData<boolean>

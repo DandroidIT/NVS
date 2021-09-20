@@ -138,7 +138,7 @@ class cams {
           return
         cam.liveMotion = data
         if (cam.liveMotion)
-          cam.liveMotionV1()
+          cam.liveMotionV2()
       } else if (NameOption === 'delete') {
         let check = await this.deleteCam(idCam)
         return check
