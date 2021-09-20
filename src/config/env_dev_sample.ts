@@ -1,5 +1,6 @@
 export default {
   identity: 'development',
+  debug: { offLog: true, writeLog: true },
   serversStatic: false,
   serversStaticFolder: '../webclient',
   serversStaticRoute: '/',

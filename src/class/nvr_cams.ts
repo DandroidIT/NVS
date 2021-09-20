@@ -1,11 +1,14 @@
 import { Probe, PtzMoveParams, Snapshot, startProbe } from "node-onvif-ts";
 import configBase, { model_logallarms } from "../config";
+import { helpers } from '../lib/helper';
 import { NoLogger } from "../lib/no-logger";
-import { iradarCam } from './interface';
+import { iradarCam, iDayAndAlarmCount, iAlarm } from './interface';
 import { nvr_cam } from "./nvr_cam";
 
 
 type alarmMethod = 'getAlarmCam' | 'getAlarmCamList' | 'getDayAndAlarmList' | 'getDayAndAlarmCount';
+
+
 
 type nameCamOption = 'live24' | 'livemotion' | 'delete' | 'altro'
 
@@ -60,8 +63,6 @@ class cams {
     this._listCam = []
     await configBase.loadConfig();
   }
-
-
 
   public urlRTSPStream(idCam: string) {
     let cam = this.getCam(idCam)
@@ -151,11 +152,104 @@ class cams {
   }
 
 
-  async managerAlarm(nameOptions: alarmMethod, idCam: string, dataFilter: string, idAlarm: string) {
-    console.log('🚀 ~ file: nvr_cams.ts ~ cams ~ managerAlarm ~ nameOptions', nameOptions, idCam)
+  /*  async managerAlarmV1(typeMethod: alarmMethod, idCam: string = ''): Promise<[iDayAndAlarmCount]> {
+     try {
+       let where = "";
+       let param: Array<string> = [];
+       if (idCam?.length) {
+         where = `idcam=?`;
+         param.push(idCam);
+       }
+       switch (typeMethod) {
+         case 'getDayAndAlarmCount':
+           let listDayAndAlarmCount = await configBase.db.logAlarms_test<[iDayAndAlarmCount]>(where, param, "date(stamptime)", ["stamptime"], "*");
+           return listDayAndAlarmCount
+           break;
+         case 'getDayAndAlarmList':
+           break;
+         default:
+           break;
+       }
+ 
+ 
+     } catch (error) {
+ 
+     }
+   } */
+
+  async alarmsCalendarCount(idCam = '', filterDate: { start: string, end: string }): Promise<iDayAndAlarmCount[]> {
+    try {
+      let select = '', where = '', count = '', params: Array<string> = [], columns: Array<string> = []
+      if (idCam?.length) {
+        where = `idcam=? and`;
+        params.push(idCam);
+      }
+      if (filterDate.start.length) {
+        if (filterDate.end.length === 0)
+          filterDate.end = filterDate.start
+        select = 'distinct(date(stamptime)) as stamptime , count(*) count'
+      } else { // limit one month
+        const todayDate = new Date()
+        const today = todayDate.toISOString().split('T')[0].split('-')
+        const lastDayMonth = new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 0).getDate()
+        filterDate.start = `${today[0]}-${today[1]}-01`
+        filterDate.end = `${today[0]}-${today[1]}-${lastDayMonth}`
+        count = '*'
+        columns.push("stamptime")
+      }
+      where = `${where} date(stamptime) between '${filterDate.start}' and '${filterDate.end}'`;
+      let _alarmCalendarCount = await configBase.db.logAlarms_test
+        <iDayAndAlarmCount[]>(where, params, "date(stamptime)", columns, count, select);
+      return _alarmCalendarCount
+    } catch (error) {
+      return [{ stamptime: '', count: '0' }]
+    }
+  }
+
+  async alarmsCalendarDet(idCam = '', filterDate: { start: '', end: '' }) {
+    try {
+      let where = '', params: Array<string> = [];
+      if (idCam?.length) {
+        where = `idcam=? and`;
+        params.push(idCam);
+      }
+      if (filterDate.end.length === 0)
+        filterDate.end = filterDate.start
+      where = `${where} date(stamptime) between '${filterDate.start}' and '${filterDate.end}' order by id desc`;
+      let listDayAndAlarmList = await configBase.db.logAlarms_test<model_logallarms[]>(where, params, '')
+      const retAlarms: iAlarm[] = []
+      listDayAndAlarmList.map((alarm) => {
+        retAlarms.push({ id: Number(alarm.id), idcam: `${alarm.idcam}`, namecam: this.getCam(alarm.idcam.toString()).nameCam, stamptime: `${alarm.stamptime}`, datarif: `${alarm.datarif}` })
+      })
+      return retAlarms
+    } catch (error) {
+      return undefined
+    }
+  }
+
+  async alarmDett(idAlarm: string): Promise<iAlarm> {
+    try {
+      let ad: iAlarm
+      const alarmsDet = await configBase.db.logAlarms_test<iAlarm[]>('id = ?', [idAlarm], '')
+      if (alarmsDet.length === 1) {
+        ad = alarmsDet[0]
+        let arrPathImg = ad.datarif.split('|')
+        let BaseString = await helpers.imageToBase64(arrPathImg[0]) + '|' + await helpers.imageToBase64(arrPathImg[1])
+        ad.datarif = BaseString
+        ad.namecam = this.getCam(ad.idcam).nameCam
+      }
+      return ad
+    } catch (error) {
+      console.log('alarmDett error', error)
+      return undefined
+    }
+  }
+
+  /* async managerAlarm(typeMethod: alarmMethod, idCam: string, dataFilter: string, idAlarm: string) {
+    console.log('🚀 ~ file: nvr_cams.ts ~ cams ~ managerAlarm ~ typeMethod', typeMethod, idCam)
     try {
       let where = "";
-      if (nameOptions == 'getDayAndAlarmCount') {
+      if (typeMethod == 'getDayAndAlarmCount') {
         let param: Array<string> = [];
         if (idCam?.length) {
           where = `idcam=?`;
@@ -163,13 +257,13 @@ class cams {
         }
         let listDayAndAlarmCount = await configBase.db.logAlarms_test<[{ stamptime: string; count: string }]>(where, param, "date(stamptime)", ["stamptime"], "*");
         return listDayAndAlarmCount
-      } else if (nameOptions == 'getDayAndAlarmList') {
+      } else if (typeMethod == 'getDayAndAlarmList') {
         where = `date(stamptime) between '${dataFilter.split("T")[0]}' and '${dataFilter.split("T")[0]
           }' order by id desc`;
         let listDayAndAlarmList = await configBase.db.logAlarms_test<model_logallarms[]>(where, [], '')
         this.logger.log('~ file: nvr_cams.ts ~ cams ~ managerAlarm ~ listDayAndAlarmList', listDayAndAlarmList)
         return listDayAndAlarmList
-      } else if (nameOptions === 'getAlarmCamList') {
+      } else if (typeMethod === 'getAlarmCamList') {
         let cam = this.getCam(idCam)
         if (cam) {
           //let alarm = await cam.getDettAlarm(idAlarm);
@@ -178,7 +272,7 @@ class cams {
           return listAlarmCamList
         }
 
-      } else if (nameOptions === 'getAlarmCam') {
+      } else if (typeMethod === 'getAlarmCam') {
         let cam = this.getCam(idCam)
         if (cam) {
           let Alarm = await cam.getDettAlarm(idAlarm);
@@ -193,7 +287,7 @@ class cams {
 
     }
 
-  }
+  } */
 
   async RadarCams(): Promise<iradarCam[]> {
     let _RadarCams: Array<iradarCam> = []

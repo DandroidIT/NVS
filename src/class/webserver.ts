@@ -52,7 +52,7 @@ class serverApi extends Koa {
     Nvr_skt.Start(this._httpsServer)
 
     this._httpsServer.listen(this._port, this._ip, () => {
-      logger.log(`App listening on the ip ${this._ip}:${this._port}`);
+      logger.info(`App listening on the ip ${this._ip}:${this._port}`);
       logger.w(`App listening on the ip ${this._ip}:${this._port}`);
     });
   }

@@ -1,5 +1,6 @@
 import * as fs from 'fs'
 import { helpers } from './helper'
+import base from '../config/env_dev'
 enum Colors {
   reset = '\x1b[0m',
   Black = '\033[30m',
@@ -11,28 +12,35 @@ enum Colors {
   Cyan = '\033[36m',
   White = '\033[37m'
 }
+
 export class NoLogger {
+
   scope: string = ''
   private filePath = ''
   offLog = false
+  writeLog = true
   //private _logWriteHistory: Array<string>=[]
   private readonly _createFile: boolean = false
   constructor(scope: string,
     createFile: boolean = false) {
-
+    this.offLog = base.debug.offLog
     this.scope = scope
     this._buildFile(createFile)
     this._createFile = createFile
   }
   //public get log(): Function { return ()=>{}}
 
+  public get info(): Function {
+    let builtMessagelog = `%c[${this.scope}] [${helpers.date.dateFULLString()}]: ${Colors.Green}%s`
+    let clog = this._emitLog('log', builtMessagelog, ['color:white;font-weight: bold;'])
+    return clog
+  }
   public get log(): Function {
     if (this.offLog)
       return () => { }
     let builtMessagelog = `%c[${this.scope}] [${helpers.date.dateFULLString()}]: ${Colors.Green}%s`
     let clog = this._emitLog('log', builtMessagelog, ['color:orange;font-weight: bold;'])
     return clog
-
   }
   public get err(): Function {
     let builtMessagelog = `%c[${this.scope}] [${helpers.date.dateFULLString()}]: ${Colors.Red}%s`
@@ -41,7 +49,8 @@ export class NoLogger {
   }
 
   public w(msg: string) {
-    this._writeFile(msg)
+    if (this.writeLog)
+      this._writeFile(msg)
   }
 
   private _buildFile(writeFile?: boolean): void {

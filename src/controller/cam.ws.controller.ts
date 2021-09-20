@@ -14,6 +14,10 @@ enum CamEventName {
   CamSetOption = 'setcamoption',
   TEST = 'test',
   ManagerAlarms = "manageralarms",
+  AlarmsCount = "alarmscount",
+  AlarmsDet = "alarmsdet",
+  AlarmDet = "alarmdet",
+
   CamScreenshot = 'camscreenshot'
 }
 
@@ -50,15 +54,17 @@ class CamWsController {
   }
 
   public static async list() {
-    let arrCam: ICamApi[] = []
+    let cams: ICamApi[] = []
     Nvr.listcam().map(async cam => {
-      arrCam.push({
-        id: cam.id!, information: cam.getInformationArray(),
+      cams.push({
+        id: cam.id, information: cam.getInformationArray(),
         name: cam.nameCam, asPTZ: cam.asPtz, inerror: cam.inError,
         liveH24: cam.recordingH24, motion: cam.liveMotion //, arrAllarm:str
       })
     })
-    return JSON.stringify({ type: 'camlist', payload: arrCam })
+    cams = cams.sort((camA, camB) => camA.id > camB.id ? 1 : -1)
+    const respData: returnData<ICamApi[]> = { inError: false, msg: '', dataResult: cams }
+    return JSON.stringify({ type: 'camlist', payload: respData })
   }
 
 
@@ -87,17 +93,57 @@ class CamWsController {
 
   }
 
-  static async managerAlarms(rawdata: any) {
+  static async getAlarmsCount(rawdata: any) {
     try {
-      let { tagcam, typeOption, dataFilter, idAlarm } = JSON.parse(rawdata).payload
-      let checkAlarm = await Nvr.managerAlarms(typeOption, tagcam, dataFilter, idAlarm)
-      return JSON.stringify({ type: `${this.camEvent.ManagerAlarms}`, payload: checkAlarm })
+      const { tagcam, dataFilter } = JSON.parse(rawdata).payload
+      const checkAlarmCount = await Nvr.getAlarmsCalendarCount(tagcam, dataFilter)
+      return JSON.stringify({ type: `${this.camEvent.AlarmsCount}`, payload: checkAlarmCount })
     } catch (error) {
-      return JSON.stringify({ type: `${this.camEvent.ManagerAlarms}`, payload: 'error' })
+      return JSON.stringify({ type: `${this.camEvent.AlarmsCount}`, payload: 'error' })
     }
-
-
   }
+
+  static async getAlarmsDet(rawdata: any) {
+    try {
+      const { tagcam, dataFilter } = JSON.parse(rawdata).payload
+      const checkAlamsDet = await Nvr.getAlarmsCalendarDet(tagcam, dataFilter)
+      checkAlamsDet.dataResult.map((alarm) => alarm.datarif = '')
+      return JSON.stringify({ type: `${this.camEvent.AlarmsDet}`, payload: checkAlamsDet })
+    } catch (error) {
+      return JSON.stringify({ type: `${this.camEvent.AlarmsDet}`, payload: 'error' })
+    }
+  }
+
+  static async getAlarmDet(rawdata: any) {
+    try {
+      const { idalarm } = JSON.parse(rawdata).payload
+      const checkAlamsDet = await Nvr.getAlarmDet(idalarm)
+      return JSON.stringify({ type: `${this.camEvent.AlarmDet}`, payload: checkAlamsDet })
+    } catch (error) {
+      return JSON.stringify({ type: `${this.camEvent.AlarmDet}`, payload: 'error' })
+    }
+  }
+
+  /*   static async managerAlarmsv1(rawdata: any) {
+      try {
+        let { tagcam, typeMethod, dataFilter, idAlarm } = JSON.parse(rawdata).payload
+        let checkAlarm = await Nvr.managerAlarmsV1(typeMethod, tagcam, dataFilter, idAlarm)
+        return JSON.stringify({ type: `${this.camEvent.ManagerAlarms}`, payload: checkAlarm })
+      } catch (error) {
+        return JSON.stringify({ type: `${this.camEvent.ManagerAlarms}`, payload: 'error' })
+      }
+  
+  
+    } */
+  /*   static async managerAlarms(rawdata: any) {
+      try {
+        let { tagcam, typeMethod, dataFilter, idAlarm } = JSON.parse(rawdata).payload
+        let checkAlarm = await Nvr.managerAlarms(typeMethod, tagcam, dataFilter, idAlarm)
+        return JSON.stringify({ type: `${this.camEvent.ManagerAlarms}`, payload: checkAlarm })
+      } catch (error) {
+        return JSON.stringify({ type: `${this.camEvent.ManagerAlarms}`, payload: 'error' })
+      }
+    } */
 
 }
 

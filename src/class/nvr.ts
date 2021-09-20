@@ -3,8 +3,8 @@ import { PtzMoveParams, Snapshot } from "node-onvif-ts";
 import { WebSocketClient } from "ws";
 import { helpers } from "../lib/helper";
 import { NoLogger } from "../lib/no-logger";
-import { iradarCam, IstreamFFMPEGCam, ISubscription, loginResponse, optNameNvr, returnData, typeWS } from "./interface";
-import { alarmMethod, cams, nameCamOption } from "./nvr_cams";
+import { iradarCam, IstreamFFMPEGCam, ISubscription, loginResponse, optNameNvr, returnData, typeWS, iDayAndAlarmCount, iAlarm } from "./interface";
+import { cams, nameCamOption } from "./nvr_cams";
 import { nvrUsers } from "./nvr_users";
 import { ffmpegOpt } from "./nvr_video";
 
@@ -232,10 +232,38 @@ class Nvr {
   }
 
 
+  async getAlarmsCalendarCount(idCam: string = '', filterDate: { start: '', end: '' }) {
+    let _response: returnData<iDayAndAlarmCount[]> = { msg: '', inError: false }
+    _response.dataResult = await this._Cams.alarmsCalendarCount(idCam, filterDate)
+    return _response
 
-  async managerAlarms(nameOptions: alarmMethod, idCam: string = '', dataFilter: string, idAlarm: string) {
-    return await this._Cams.managerAlarm(nameOptions, idCam, dataFilter, idAlarm)
   }
+  async getAlarmsCalendarDet(idCam = '', filterDate: { start: '', end: '' }) {
+    const _response: returnData<iAlarm[]> = { msg: '', inError: false }
+    _response.dataResult = await this._Cams.alarmsCalendarDet(idCam, filterDate)
+    return _response
+  }
+  async getAlarmDet(idAlarm: string) {
+    const _response: returnData<iAlarm> = { msg: '', inError: false }
+    _response.dataResult = await this._Cams.alarmDett(idAlarm)
+    return _response
+  }
+
+  /*   async managerAlarmsV1(typeMethod: alarmMethod, idCam: string = '', dataFilter: string, idAlarm: string) {
+      let _response: returnData<[iDayAndAlarmCount]> = { msg: '', inError: false }
+      try {
+        _response.dataResult = await this._Cams.managerAlarmV1(typeMethod, idCam,)// dataFilter, idAlarm)
+        return _response
+      } catch (error) {
+        _response.inError = true
+        _response.msg = error.message
+        return _response
+      }
+  
+    } */
+  /*   async managerAlarms(typeMethod: alarmMethod, idCam: string = '', dataFilter: string, idAlarm: string) {
+      return await this._Cams.managerAlarm(typeMethod, idCam, dataFilter, idAlarm)
+    } */
 
 
   async RadarCams(): Promise<returnData<iradarCam[]>> {
@@ -244,7 +272,7 @@ class Nvr {
       if (!this._blockPublicAllConnection) {
         // throw new Error('First block public access')
         _response.inError = true
-        _response.msg = 'First block access to public ip'
+        _response.msg = 'block access to public ip is OFF'
         return _response
       }
       _response.dataResult = await this._Cams.RadarCams()

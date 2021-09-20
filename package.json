@@ -1,6 +1,6 @@
 {
   "name": "n.v.s.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Network Video Surveillance",
   "main": "start.js",
   "scripts": {

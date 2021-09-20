@@ -212,26 +212,25 @@ class db {
     logger.log('- logAlarms_setQuery:', `query: ${query} - logAlarms.length: ${logAlarms.length}`)
     return logAlarms
   }
-  async logAlarms_test<T>(query: string, arrParam: Array<any> = [], dist: string, column: Array<string> = [], count: string = '') {
+  async logAlarms_test<T>(query: string, arrParam: Array<any> = [], dist: string, column: Array<string> = [], count: string = '', select = '') {
     try {
       let q: knex.QueryBuilder = this._db.knex('logallarms').whereRaw(query, arrParam)
+      if (select.length) {
+        q.select(this._db.knex.raw(select))
+      }
       if (dist.length) {
         q.groupByRaw(dist)
       }
-
       if (column?.length) {
         q.column(column)
       }
-
       if (count) {
         q.count(count, { as: count === '*' ? 'count' : `${count}` })
       }
       const queryResult = await this._db.raw<T>(q, true)
-      logger.log('- logAlarms_test ~ db ~ ', queryResult)
-
       return queryResult
     } catch (error) {
-      logger.err('- logAlarms_test ~ db ~ error', error)
+      console.error('- logAlarms_test ~ db ~ error', error)
       return undefined
     }
 
