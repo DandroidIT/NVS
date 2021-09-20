@@ -16,7 +16,7 @@ Network Video Surveillance
 
 - Server static for host client
 
-- client https://github.com/DandroidIT/nvs-c (Quasar 2 & Vue3 ts)
+- client in out/webclient - source code: https://github.com/DandroidIT/nvs-c (Quasar 2 & Vue3 ts)
 
 ### Installation
 
