@@ -4,9 +4,9 @@ Network Video Surveillance
 
 # Features
 
-- support only onvif protocol
+- Support only onvif protocol
 
-- websocket for video and command
+- Eebsocket for video and command
 
 - Recording H24
 
