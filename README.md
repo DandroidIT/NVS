@@ -4,17 +4,19 @@ Network Video Surveillance
 
 # Features
 
-- Onvif compatible
+- support only onvif protocol
 
-- Api websocket
+- websocket for video and command
 
 - Recording H24
 
 - Motion detection
 
-- PTZ / PRESET (if compatible)
+- PTZ / PRESET
 
-- Client web (in development)
+- Server static for host client
+
+- client https://github.com/DandroidIT/nvs-c (Quasar 2 & Vue3 ts)
 
 ### Installation
 
@@ -30,7 +32,7 @@ git clone https://github.com/DandroidIT/NVS.git
 npm install
 ```
 
-3. Rename file
+3. Rename file and custom
 
 ```sh
 `src/config/env_dev_sample.ts` in `src/config/env_dev.ts`
