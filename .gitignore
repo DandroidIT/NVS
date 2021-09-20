@@ -8,5 +8,6 @@ src/class/webpush.ts
 src/client
 package-lock.json
 storage*.db
-
+*.sql
+*.zip
 src/lib/testlog_.ts
