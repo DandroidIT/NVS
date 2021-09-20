@@ -43,3 +43,11 @@ npm install
 ```sh
 npm start
 ```
+
+5. Enjoy
+
+```sh
+Open browser https://192.168.1.1:4004
+username: admin
+password: 123456789
+```
