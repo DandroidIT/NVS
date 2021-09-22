@@ -53,7 +53,7 @@ npm start
 6. Enjoy
 
 ```sh
-Open browser https://192.168.1.1:4004
+Open browser https://192.168.1.1:4004/web/
 username: admin
 password: 123456789
 ```
