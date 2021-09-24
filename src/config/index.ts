@@ -156,7 +156,7 @@ class db {
       if (!this.dbExist) {
         await this._tabUsers.create({
           username: "admin",
-          password: "123456789",
+          password: await mycrypt.hashtext("123456789"),
         });
         await this.demoCam();
       }
