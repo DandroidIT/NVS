@@ -69,11 +69,16 @@ class serverApi extends Koa {
       br: false // disable brotli
     }))
     this.use(Cors())
-    this.use(helmet())
+
+    this.use(helmet.contentSecurityPolicy({
+      //reportOnly: true,
+      directives: {
+        defaultSrc: ["'self'", "data:", "'unsafe-inline'"], scriptSrc: ["'self'", "'unsafe-eval'"]
+      }
+    }))
     this.use(bodyParser())
     this.use(this._logger)
   }
-
 
   private async _logger(ctx: Koa.ParameterizedContext, next: () => Promise<any>) {
     let format = ':method ":url"';

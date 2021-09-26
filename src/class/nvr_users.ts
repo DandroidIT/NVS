@@ -179,7 +179,7 @@ class nvrUsers {
       return { success: true, token: token }
     } else {
       this.logger.log(`Login Fail - username:${username} password:${pass} ip:${ip}`)
-      return { success: false, token: '' }
+      return { success: false, token: '', error: 'Login Fail' }
     }
 
   }

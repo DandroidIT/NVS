@@ -142,9 +142,10 @@ class db {
   }
   async demoCam() {
     if (!this.dbExist) {
-      env_dev.cams.forEach(async cam => {
+      for (let index = 0; index < env_dev.cams.length; index++) {
+        const cam = env_dev.cams[index]
         await this._tabCams.updateOrCreate(cam, cam)
-      })
+      }
     }
   }
   async _setupTabs(): Promise<boolean> {
