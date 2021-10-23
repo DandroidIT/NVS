@@ -13,7 +13,7 @@ export interface ISubscription {
 
 export type optNameNvr = 'ipblock' | 'other';
 
-export type returnData<T> = { inError?: boolean; msg: string; dataResult: T }
+export type returnData<T> = { inError: boolean; msg: string; dataResult?: T }
 
 export interface IUser {
   id: string;
@@ -22,8 +22,7 @@ export interface IUser {
   username: string;
   token: string;
   last_connect: string;
-  ws_list: Map<string, connectWS> //Array<connectWS>
-  /* ws_stream?: WebSocket */
+  ws_list: Map<string, connectWS>
 }
 
 export type typeWS = 'api' | 'stream';
@@ -37,6 +36,15 @@ interface connectWS {
 export interface ICamApi {
   id: string; information: [string, any][], name: string, asPTZ: boolean;
   inerror: boolean, liveH24: boolean, motion: boolean
+}
+
+export interface iAlarm {
+  id: number,
+  idcam: string,
+  namecam: string,
+  stamptime: string,
+  datarif: string,
+  /*  msg: string */
 }
 
 export interface IstreamFFMPEGCam {
@@ -58,5 +66,6 @@ export interface loginResponse {
   error?: string;
 }
 
-export interface iradarCam { urn: string; name: string; xaddrs: string[]; username?: string; password?: string, exist: boolean }
+export interface iradarCam { urn: string; name: string; xaddrs: string[]; username: string; password: string, exist: boolean }
 
+export type iDayAndAlarmCount = { stamptime: string; count: string }

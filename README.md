@@ -2,19 +2,31 @@
 
 Network Video Surveillance
 
+# New Features
+
+- Task to monitor HD space for recording (default 20 GB)
+
+- Monitor user logins and more for a security report (logs in root folder)
+
+- Replaced the canvas element for the stream with the video element
+
 # Features
 
-- Onvif compatible
+- Support only onvif protocol
 
-- Api websocket
+- Support audio/video
+
+- Websocket for stream and commands
 
 - Recording H24
 
 - Motion detection
 
-- PTZ / PRESET (if compatible)
+- PTZ / PRESET
 
-- Client web (in development)
+- Server static for host client
+
+- client in out/webclient - source code: https://github.com/DandroidIT/nvs-c (Quasar 2 & Vue3 ts)
 
 ### Installation
 
@@ -30,14 +42,28 @@ git clone https://github.com/DandroidIT/NVS.git
 npm install
 ```
 
-3. Rename file
+3. Rename file and custom
 
 ```sh
 `src/config/env_dev_sample.ts` in `src/config/env_dev.ts`
 ```
 
-4. Start
+4. create ssl certificate
+
+```sh
+mkcert https://github.com/FiloSottile/mkcert
+```
+
+6. Start
 
 ```sh
 npm start
+```
+
+6. Enjoy
+
+```sh
+Open browser https://192.168.1.1:4004/web/
+username: admin
+password: 123456789
 ```

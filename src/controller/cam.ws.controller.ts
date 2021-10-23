@@ -1,29 +1,32 @@
 import { IncomingMessage } from "http";
-import WebSocket, { WebSocketClient } from "ws";
-import { ICamApi } from '../class/interface'
+import { WebSocketClient } from "ws";
+import { ICamApi, returnData } from '../class/interface'
 import Nvr from '../class/nvr'
 import { NoLogger } from '../lib/no-logger'
 import NvrWsController from "./nvr.ws.controller";
 
 
-const logger = new NoLogger('CamWSController', true)//, true)
-logger.log('Start log for CamWSController')
+const logger = new NoLogger('CamWSController')
 enum CamEventName {
   CamControll = 'camcontroll',
   CamList = 'camlist',
   CamSetOption = 'setcamoption',
   TEST = 'test',
-  ManagerAlarms = "manageralarms"
+  ManagerAlarms = "manageralarms",
+  AlarmsCount = "alarmscount",
+  AlarmsDet = "alarmsdet",
+  AlarmDet = "alarmdet",
+
+  CamScreenshot = 'camscreenshot'
 }
 
 class CamWsController {
   public static camEvent = CamEventName
 
   public static async move(data: any): Promise<string> {
-    logger.log('CamWsController ~ move ~ data', data)
     try {
       let { cmd, tagcam, speed, timeout, preset } = JSON.parse(data).payload
-      let checkCommand = false
+      let checkCommand: returnData<boolean>
       if (cmd === 'move_stop') {
         checkCommand = Nvr.stopCam(tagcam)
       } else if (cmd === 'move') {
@@ -32,9 +35,6 @@ class CamWsController {
         checkCommand = await Nvr.presetCam(tagcam, preset, speed)
       } else if (cmd === 'save_preset') {
         checkCommand = await Nvr.presetCamSave(tagcam, preset)
-      } else if (cmd === 'screenshot') {
-        let foto = await Nvr.screenshot(tagcam)
-        return JSON.stringify({ type: cmd, payload: foto?.body })
       } else {
         return JSON.stringify({ type: cmd, payload: checkCommand })
       }
@@ -46,22 +46,29 @@ class CamWsController {
 
   }
 
+  public static async screenshot(data: any): Promise<string> {
+    let { tagcam } = JSON.parse(data).payload
+    let respScreenshot = await Nvr.screenshot(tagcam)
+    return JSON.stringify({ type: `${this.camEvent.CamScreenshot}`, payload: respScreenshot })
+  }
+
   public static async list() {
-    let arrCam: ICamApi[] = []
+    let cams: ICamApi[] = []
     Nvr.listcam().map(async cam => {
-      arrCam.push({
-        id: cam.id!, information: cam.getInformationArray(),
+      cams.push({
+        id: cam.id, information: cam.getInformationArray(),
         name: cam.nameCam, asPTZ: cam.asPtz, inerror: cam.inError,
         liveH24: cam.recordingH24, motion: cam.liveMotion //, arrAllarm:str
       })
     })
-    return JSON.stringify({ type: 'camlist', payload: arrCam })
+    cams = cams.sort((camA, camB) => camA.id > camB.id ? 1 : -1)
+    const respData: returnData<ICamApi[]> = { inError: false, msg: '', dataResult: cams }
+    return JSON.stringify({ type: 'camlist', payload: respData })
   }
 
-  /*  public static StreamCam(idCam: string, ws: WebSocketClient, request: IncomingMessage) {
-     Nvr.streamCam(idCam, ws, request.headers['sec-websocket-protocol']!)
-   } */
-  public static StreamCam(ws: WebSocketClient, request: IncomingMessage) {// nuova versione 31 maggio 2021
+
+
+  public static StreamCam(ws: WebSocketClient, request: IncomingMessage) {
     let getRoute: string[] | undefined = request.url?.split('/')
     let protocol = request.headers['sec-websocket-protocol']
     if (getRoute?.length && protocol?.length) {
@@ -85,17 +92,57 @@ class CamWsController {
 
   }
 
-  static async managerAlarms(rawdata: any) {
+  static async getAlarmsCount(rawdata: any) {
     try {
-      let { tagcam, typeOption, dataFilter, idAlarm } = JSON.parse(rawdata).payload
-      let checkAlarm = await Nvr.managerAlarms(typeOption, tagcam, dataFilter, idAlarm)
-      return JSON.stringify({ type: `${this.camEvent.ManagerAlarms}`, payload: checkAlarm })
+      const { tagcam, dataFilter } = JSON.parse(rawdata).payload
+      const checkAlarmCount = await Nvr.getAlarmsCalendarCount(tagcam, dataFilter)
+      return JSON.stringify({ type: `${this.camEvent.AlarmsCount}`, payload: checkAlarmCount })
     } catch (error) {
-      return JSON.stringify({ type: `${this.camEvent.ManagerAlarms}`, payload: 'error' })
+      return JSON.stringify({ type: `${this.camEvent.AlarmsCount}`, payload: 'error' })
     }
-
-
   }
+
+  static async getAlarmsDet(rawdata: any) {
+    try {
+      const { tagcam, dataFilter } = JSON.parse(rawdata).payload
+      const checkAlamsDet = await Nvr.getAlarmsCalendarDet(tagcam, dataFilter)
+      checkAlamsDet.dataResult.map((alarm) => alarm.datarif = '')
+      return JSON.stringify({ type: `${this.camEvent.AlarmsDet}`, payload: checkAlamsDet })
+    } catch (error) {
+      return JSON.stringify({ type: `${this.camEvent.AlarmsDet}`, payload: 'error' })
+    }
+  }
+
+  static async getAlarmDet(rawdata: any) {
+    try {
+      const { idalarm } = JSON.parse(rawdata).payload
+      const checkAlamsDet = await Nvr.getAlarmDet(idalarm)
+      return JSON.stringify({ type: `${this.camEvent.AlarmDet}`, payload: checkAlamsDet })
+    } catch (error) {
+      return JSON.stringify({ type: `${this.camEvent.AlarmDet}`, payload: 'error' })
+    }
+  }
+
+  /*   static async managerAlarmsv1(rawdata: any) {
+      try {
+        let { tagcam, typeMethod, dataFilter, idAlarm } = JSON.parse(rawdata).payload
+        let checkAlarm = await Nvr.managerAlarmsV1(typeMethod, tagcam, dataFilter, idAlarm)
+        return JSON.stringify({ type: `${this.camEvent.ManagerAlarms}`, payload: checkAlarm })
+      } catch (error) {
+        return JSON.stringify({ type: `${this.camEvent.ManagerAlarms}`, payload: 'error' })
+      }
+  
+  
+    } */
+  /*   static async managerAlarms(rawdata: any) {
+      try {
+        let { tagcam, typeMethod, dataFilter, idAlarm } = JSON.parse(rawdata).payload
+        let checkAlarm = await Nvr.managerAlarms(typeMethod, tagcam, dataFilter, idAlarm)
+        return JSON.stringify({ type: `${this.camEvent.ManagerAlarms}`, payload: checkAlarm })
+      } catch (error) {
+        return JSON.stringify({ type: `${this.camEvent.ManagerAlarms}`, payload: 'error' })
+      }
+    } */
 
 }
 

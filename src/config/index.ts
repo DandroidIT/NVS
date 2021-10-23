@@ -1,14 +1,17 @@
 
 import { connect, Model, Trilogy, } from "trilogy";
+import path from 'path'
 import * as knex from 'knex';
 import fs from "fs";
 import { NoLogger } from '../lib/no-logger'
+import { mycrypt } from '../lib/helper'
 import env_dev from './env_dev';
-const logger = new NoLogger('configbase', true)
-logger.log('log for configbase')
+
+const logger = new NoLogger('configbase')
+
 
 enum efolder {
-  storeCam = 'storecams',
+  storeCams = 'storecams',
   motion = 'motion',
   video = 'video'
 }
@@ -17,14 +20,20 @@ class configBase {
   public ip = env_dev.ip
   public port = env_dev.port
   public https = {
-    key: fs.readFileSync('./ssl/server_dev.key'),
-    cert: fs.readFileSync('./ssl/server_dev.crt')
+    key: fs.readFileSync(`${env_dev.cert_key}`),
+    cert: fs.readFileSync(`${env_dev.cert_crt}`)
   };
+  public AppClient = { start: env_dev.serversStatic, folder: env_dev.serversStaticFolder, route: env_dev.serversStaticRoute }
+
   public secret = env_dev.secret
+  public tokenExpiresIn = env_dev.tokenExpiresIn
   public namedb = env_dev.database
   public folderForCams = efolder
+  public rootForder = path.resolve('./')
+  public percentageSpaceReserved = env_dev.percentage_HD_space_reserved
+  public spaceMaxMedia = env_dev.space_max_GB_media
   private _db = new db(this.namedb);
-  splitVideoSecond = '10';
+  public splitVideoSecond = '10';
   public get db() {
     return this._db;
   }
@@ -138,9 +147,10 @@ class db {
   }
   async demoCam() {
     if (!this.dbExist) {
-      env_dev.cams.forEach(async cam => {
+      for (let index = 0; index < env_dev.cams.length; index++) {
+        const cam = env_dev.cams[index]
         await this._tabCams.updateOrCreate(cam, cam)
-      })
+      }
     }
   }
   async _setupTabs(): Promise<boolean> {
@@ -152,7 +162,7 @@ class db {
       if (!this.dbExist) {
         await this._tabUsers.create({
           username: "admin",
-          password: "123456789",
+          password: await mycrypt.hashtext("123456789"),
         });
         await this.demoCam();
       }
@@ -162,6 +172,34 @@ class db {
       return false;
 
     }
+  }
+
+  async getUser(username: string, password: string) {
+    const u = await this._tabUsers.findOne({ username: username });
+    if (u) {
+      const checkcompare = await mycrypt.comparetext(password, u.password.toString())
+      if (checkcompare === true) {
+        return u
+      }
+
+    }
+  }
+  async saveUser(username: string, password: string, newUsername: string, newPassword: string) {
+    if (!this.getUser(username, password))
+      return false
+
+    if (username !== newUsername) {
+      let dbUser = await this._tabUsers.findOne({ username: newUsername })
+      if (dbUser) {
+        return false
+      }
+    }
+
+    let save = await this._tabUsers.update(
+      { username: username },
+      { username: newUsername, password: await mycrypt.hashtext(newPassword) }
+    );
+    return save.length === 0 ? false : true
   }
 
   async logAlarms_setQuery(query: string, arrParam: Array<any> = [], dist: string = '', column: Array<string> = [], count: string = '') {
@@ -180,26 +218,25 @@ class db {
     logger.log('- logAlarms_setQuery:', `query: ${query} - logAlarms.length: ${logAlarms.length}`)
     return logAlarms
   }
-  async logAlarms_test<T>(query: string, arrParam: Array<any> = [], dist: string, column: Array<string> = [], count: string = '') {
+  async logAlarms_test<T>(query: string, arrParam: Array<any> = [], dist: string, column: Array<string> = [], count: string = '', select = '') {
     try {
       let q: knex.QueryBuilder = this._db.knex('logallarms').whereRaw(query, arrParam)
+      if (select.length) {
+        q.select(this._db.knex.raw(select))
+      }
       if (dist.length) {
         q.groupByRaw(dist)
       }
-
       if (column?.length) {
         q.column(column)
       }
-
       if (count) {
         q.count(count, { as: count === '*' ? 'count' : `${count}` })
       }
       const queryResult = await this._db.raw<T>(q, true)
-      logger.log('- logAlarms_test ~ db ~ ', queryResult)
-
       return queryResult
     } catch (error) {
-      logger.err('- logAlarms_test ~ db ~ error', error)
+      console.error('- logAlarms_test ~ db ~ error', error)
       return undefined
     }
 

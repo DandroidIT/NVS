@@ -12,7 +12,7 @@ class Nvr_ws {
 	private _wsServerStream!: Server
 	private _wsServerEvent!: Server
 	constructor() {
-		this.logger = new NoLogger('Nvr_ws load')
+		this.logger = new NoLogger('Nvr_ws')
 	}
 
 	Start(httpsServer: https.Server | http.Server) {
@@ -32,23 +32,21 @@ class Nvr_ws {
 			return;
 		}
 		if (!checkToken(request)) {
-			this.logger.err('NO TOCKEN')
 			socket.end('HTTP/1.1 400 Bad Request');
+			socket.destroy()
 			return;
 		}
-		this.logger.log(`svrUpgrade: upgrade server ip:${request.socket.remoteAddress}`)
+
 		let getRoute: string[] = []
 		if (request.url?.split('/'))
 			getRoute = request.url?.split('/')
 
 		if (getRoute[1] === 'apievent') {
 			this._wsServerEvent.handleUpgrade(request, socket, head, (wsclient: WebSocket, request: IncomingMessage) => {
-				this.logger.log('svrUpgrade _wsServerEvent handleUpgrade...')
 				this._wsServerEvent.emit('connection', wsclient, request)
 			})
 		} else if (getRoute[1] === 'stream') {
 			this._wsServerStream.handleUpgrade(request, socket, head, (wsclient: WebSocket, request: IncomingMessage) => {
-				this.logger.log('svrUpgrade _wsServerStream handleUpgrade...')
 				this._wsServerStream.emit('connection', wsclient, request)
 			})
 		} else {
@@ -59,15 +57,13 @@ class Nvr_ws {
 	}
 
 	private _wsServerEventConnection = (ws: WebSocketClient, request: IncomingMessage) => {
-		this.logger.log(`wsServerEventConnection - ip client: ${request.socket.remoteAddress}:${request.socket.remotePort} 
-        clients.size: ${this._wsServerEvent.clients.size}`);
+		this.logger.log(`WS Event Connection - ip client: ${request.socket.remoteAddress}:${request.socket.remotePort} clients.size: ${this._wsServerEvent.clients.size}`);
 		ws.send(JSON.stringify({ type: 'connect', payload: `ok connection` }))
 		wsEventRoute(ws, request)
 	}
 
 	private _wsServerStreamConnection = (ws: WebSocketClient, request: IncomingMessage) => {
-		this.logger.log(`_wsServerStreamConnection - ip client: ${request.socket.remoteAddress}:${request.socket.remotePort} 
-        clients.size: ${this._wsServerStream.clients.size}`);
+		this.logger.log(`WS Stream Connection - ip client: ${request.socket.remoteAddress}:${request.socket.remotePort} clients.size: ${this._wsServerStream.clients.size}`);
 		wsStreamRouter(ws, request)
 	}
 

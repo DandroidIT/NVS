@@ -5,8 +5,9 @@ import configBase, { model_notify_user } from "../config";
 import { nanoId, helpers, helpJwt } from '../lib/helper'
 import { ISubscription, IUser, typeWS, loginResponse } from './interface'
 import { WebPushError, SendResult } from "web-push";
+import { TokenExpiredError } from 'jsonwebtoken';
 
-class users {
+class nvrUsers {
 
   private _listUsers: Map<string, IUser> = new Map();
   logger: NoLogger
@@ -101,34 +102,35 @@ class users {
     }
   }
 
-  setWS(ws: WebSocketClient, protocol: string, type: typeWS, tagid: string = ''): boolean {
+  setWS(ws: WebSocketClient, protocol: string, type: typeWS, tagid: string = '') {
     let user: IUser = this.verifyUserToken(protocol)
     if (user) {
-      this.logger.log(`${user.username}: setWS`)
       user.ws_list?.set(ws.idConnect, { type: type, tagid: tagid, ws: ws })
       if (type === 'api') {
         ws.online = true
         ws.on("close", (code: number, reason: string) => {
-          this.logger.log(`NvrWsController InitClient : CLOSE API Client disconnected user.id: ${user?.id} user.idconnect:${user?.idconnect} ws.idConnect:${ws.idConnect} - reason: ${reason} code: ${code}`);
-          this.logout(protocol, true)
+          this.logger.log(`WS disconnected for user: (${user?.id})${user.username} type: ${type} - user.idconnect:${user?.idconnect} ws.idConnect:${ws.idConnect} - reason: ${reason} code: ${code}`);
+          //this.logout(protocol, true)
+          this.logoutAndDestroy(user.id)
         })
       } else if (type === 'stream') {
         ws.binaryType = "arraybuffer";
         ws.send(this.streamHeaders(), { binary: true });
 
         ws.on("error", (err) => {
-          this.logger.err(`streamCam_test ws onerror error:${err}`);
+          this.logger.err(`setWS type: ${type} ws.onerror error:${err}`);
           this.removeWS(user?.id!, ws.idConnect);
         });
         ws.on("close", (code: number, reason: string) => {
-          this.logger.log(
-            `streamCam_test ws onclose reason:${reason} code:${code}`
-          );
+          this.logger.log(`WS disconnected for user: (${user?.id})${user.username} type: ${type} - user.idconnect:${user?.idconnect} ws.idConnect:${ws.idConnect} - reason: ${reason} code: ${code}`);
           this.removeWS(user?.id!, ws.idConnect);
         });
       }
+
+      this.logger.log(`WS SET for user: ${user.username} - type: ${type}  - ws.idConnect:${ws.idConnect}  user.ws_list.size: ${user.ws_list.size}`)
     }
-    return true
+
+
   }
 
   removeWS(idUser: string, wsIdConect: string) {
@@ -152,22 +154,22 @@ class users {
   }
 
   async login(username: string, pass: string, ip: string): Promise<loginResponse> {
-    let dbUuser = await configBase.db.tabUsers.findOne({
-      username: username,
-      password: pass,
-    });
-    if (dbUuser) {
-      if (this.filter(dbUuser.id!.toString())) {
-        return { success: false, token: '', error: 'user in login' }
-      }
+    const dbUser = await configBase.db.getUser(username, pass)
+    if (dbUser) {
+      // TODO:rem necessario per scollegare utente quando cade websocket
+      /* if (this.logoutAndDestroy(dbUser.id!.toString())) {
+        return { error: 'user logout, please reload and login', success: false, token: '' }
+      } */
+      // ***************************************************************
       let getData = helpers.date.dateString();
       let token = helpJwt.getToken(
-        { id: `${dbUuser.id!}`, create_at: getData },
+        { id: `${dbUser.id!}`, create_at: getData },
         configBase.secret,
-        { expiresIn: "1d" }
+        { expiresIn: configBase.tokenExpiresIn }
       );
+
       this.Add({
-        id: dbUuser.id!.toString(),
+        id: dbUser.id!.toString(),
         idconnect: nanoId.getId(),
         ip: ip,
         username: username,
@@ -175,39 +177,67 @@ class users {
         last_connect: getData,
         ws_list: new Map()
       });
+      this.logger.log(`Login Success - username:${username} ip:${ip}`)
       return { success: true, token: token }
     } else {
-      return { success: false, token: '' }
+      this.logger.log(`Login Fail - username:${username} password:${pass} ip:${ip}`)
+      return { success: false, token: '', error: 'Login Fail' }
     }
 
   }
 
-
-  async update(
-    username: string,
-    pass: string,
-    usernameNew: string,
-    passNew: string
-  ) {
-    let user = await configBase.db.tabUsers.findOne({
-      username: username,
-      password: pass,
-    });
+  logout(token: string, checkWS = false) {
+    let user = this.verifyUserToken(token)
     if (user) {
-      let checkUserNew = await configBase.db.tabUsers.update(
-        { username: usernameNew },
-        { password: passNew }
-      );
-      return checkUserNew ? true : false;
-    }
+      if (checkWS && user.ws_list.size > 1) {
+        return false
+      }
+      if (user.ws_list.size) {
+        user.ws_list.forEach(wsUser => {
+          wsUser.ws.terminate()
+        });
 
-    return false;
+      }
+      this.remove(user.id)
+      return true
+    }
+    return false
   }
+
+  logoutAndDestroy(idUser: string) {
+    const user = this.filter(idUser);
+    if (user) {
+      if (user.ws_list.size) {
+        user.ws_list.forEach(wsUser => {
+          wsUser.ws.terminate()
+        });
+        user.ws_list = new Map()
+      }
+
+      // TODO:rem necessario per scollegare utente quando cade websocket
+      //this.remove(user.id)
+      // ***************************************************************
+      this.logger.log(`logoutAndDestroy username:${user.username} user.ws_list.size:${user.ws_list.size} this._listUsers.size:${this._listUsers.size}`)
+      return true
+    }
+    return false
+  }
+
 
   verifyUserToken(authToken: string) {
-    helpJwt.verifyToken(authToken, configBase.secret, { complete: true });
-    let u = helpJwt.decodeToken(authToken, { complete: true }) as any;
-    return this.filter(u.payload.id);
+    try {
+      helpJwt.verifyToken(authToken, configBase.secret, { complete: true });
+      const u = helpJwt.decodeToken(authToken, { complete: true }) as any;
+      return this.filter(u.payload.id);
+    } catch (error: unknown) {
+      if (error instanceof TokenExpiredError) {
+        this.logger.err(`verifyUserToken catch TokenExpiredError: ${error.message} expiredAt: ${error.expiredAt}`);
+      } else {
+        this.logger.err(`verifyUserToken catch: ${error}`);
+      }
+      return undefined
+    }
+
   }
 
   sendVideo(idCam: string, chunk: any) {
@@ -238,24 +268,17 @@ class users {
     return streamHeader;
   }
 
-  logout(token: string, checkWS = false) {
-    let user = this.verifyUserToken(token)
-    if (user) {
-      if (checkWS && user.ws_list.size > 1) {
-        return false
-      }
-      if (user.ws_list.size) {
-        user.ws_list.forEach(wsUser => {
-          wsUser.ws.terminate()
-        });
-        this._listUsers.delete(user.id)
-        return true
-      }
+  async update(
+    username: string,
+    password: string,
+    newUsername: string,
+    newPassword: string
+  ) {
 
-
-    }
-    return false
+    return await configBase.db.saveUser(username, password, newUsername, newPassword)
   }
+
+
 }
 
-export { users }
+export { nvrUsers }
