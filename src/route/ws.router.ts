@@ -98,7 +98,6 @@ export function checkToken(request: IncomingMessage): boolean {
 			logger.w(`checkToken not valid socket.remoteAddress: ${request.socket.remoteAddress} url: ${request.url} token: ${request.headers['sec-websocket-protocol']}`)
 			return false
 		}
-		logger.log('sec-websocket-protocol IS VALID:', request.headers['sec-websocket-protocol'])
 		return true;
 	} catch (error) {
 		return false

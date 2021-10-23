@@ -43,12 +43,10 @@ class Nvr_ws {
 
 		if (getRoute[1] === 'apievent') {
 			this._wsServerEvent.handleUpgrade(request, socket, head, (wsclient: WebSocket, request: IncomingMessage) => {
-				this.logger.log('svrUpgrade _wsServerEvent handleUpgrade...')
 				this._wsServerEvent.emit('connection', wsclient, request)
 			})
 		} else if (getRoute[1] === 'stream') {
 			this._wsServerStream.handleUpgrade(request, socket, head, (wsclient: WebSocket, request: IncomingMessage) => {
-				this.logger.log('svrUpgrade _wsServerStream handleUpgrade...')
 				this._wsServerStream.emit('connection', wsclient, request)
 			})
 		} else {
@@ -59,15 +57,13 @@ class Nvr_ws {
 	}
 
 	private _wsServerEventConnection = (ws: WebSocketClient, request: IncomingMessage) => {
-		this.logger.log(`wsServerEventConnection - ip client: ${request.socket.remoteAddress}:${request.socket.remotePort} 
-        clients.size: ${this._wsServerEvent.clients.size}`);
+		this.logger.log(`WS Event Connection - ip client: ${request.socket.remoteAddress}:${request.socket.remotePort} clients.size: ${this._wsServerEvent.clients.size}`);
 		ws.send(JSON.stringify({ type: 'connect', payload: `ok connection` }))
 		wsEventRoute(ws, request)
 	}
 
 	private _wsServerStreamConnection = (ws: WebSocketClient, request: IncomingMessage) => {
-		this.logger.log(`_wsServerStreamConnection - ip client: ${request.socket.remoteAddress}:${request.socket.remotePort} 
-        clients.size: ${this._wsServerStream.clients.size}`);
+		this.logger.log(`WS Stream Connection - ip client: ${request.socket.remoteAddress}:${request.socket.remotePort} clients.size: ${this._wsServerStream.clients.size}`);
 		wsStreamRouter(ws, request)
 	}
 

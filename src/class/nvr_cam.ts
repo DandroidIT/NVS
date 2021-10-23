@@ -53,7 +53,7 @@ class nvr_cam {
     this._durationVideos = durationVideo
     this._emitAlarm = cbAlarm
     this.logger = new NoLogger(`cam_${this.id}`, true)//, true)
-    this.logger.log(`Start log for cam${this.id}`)
+    this.logger.log(`Start log for cam ${this.nameCam}`)
 
     this._elaborateVideo = new elaborateVideo()
     this.camRX = new OnvifDevice({ xaddr: this.ip, user: this.username, pass: this.password })
@@ -96,7 +96,7 @@ class nvr_cam {
   }
 
   private _pathElaborate(path: string, forMotion?: boolean): string {
-    let _urlElaborate = `${path}/${configBase.folderForCams.storeCam}/${this.id}/${helpers.date.dateString().split(' ')[0]}`
+    let _urlElaborate = `${path}/${configBase.folderForCams.storeCams}/${this.id}/${helpers.date.dateString().split(' ')[0]}`
     if (forMotion) {
       _urlElaborate = `${_urlElaborate}/${configBase.folderForCams.motion}/`
     } else {
@@ -180,7 +180,6 @@ class nvr_cam {
   async liveMotionV2() {
 
     if (!this._liveMotion) { return }
-    this.logger.log(`liveMotionV2 start cam id: ${this.id}`)
     while (this._liveMotion) {
       const checkmotion = await this.checkMotionDetected()
       if (checkmotion.inError) {

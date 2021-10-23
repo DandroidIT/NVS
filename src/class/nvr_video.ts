@@ -28,7 +28,7 @@ class elaborateVideo {
         logger.log(data.toString())
       });
       ffmpegNew.stdout.on("close", (code: number, signal: string) => {
-        logger.log(`startVideoRecording - ffmpegNew onclose pid:${ffmpegNew.pid} close:${code} signal:${signal}`);
+        //logger.log(`startVideoRecording - ffmpegNew onclose pid:${ffmpegNew.pid} close:${code} signal:${signal}`);
       });
       ffmpegNew.on('error', (err: Buffer) => {
         logger.log('🚀 ~ file: nvr_video.ts ~ line 40 ~ elaborateVideo ~ ffmpegNew.on ~ err')
@@ -37,7 +37,7 @@ class elaborateVideo {
 
       })
       ffmpegNew.on("exit", (code) => {
-        logger.log(`startVideoRecording - ffmpegNew onexit pid:${ffmpegNew.pid} code:${code}`);
+        //logger.log(`startVideoRecording - ffmpegNew onexit pid:${ffmpegNew.pid} code:${code}`);
         res(true)
       });
       //this._FFMPEGs.push({ pid: ffmpegNew.pid, urlstream: source, spawnProcess: ffmpegNew })

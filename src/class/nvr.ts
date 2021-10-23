@@ -8,6 +8,8 @@ import { cams, nameCamOption } from "./nvr_cams";
 import { nvrUsers } from "./nvr_users";
 import { ffmpegOpt } from "./nvr_video";
 
+import nvr_system from './nvr_system'
+
 
 
 class Nvr {
@@ -19,14 +21,14 @@ class Nvr {
   private _Users = new nvrUsers();
 
   constructor() {
-    this.logger = new NoLogger("nvr", true);
-    this.logger.log("Start log for Nvr");
+    this.logger = new NoLogger("nvr");
+
   }
 
   async startNvr() {
     try {
       await this._Cams.StartCams(this._Users.SendAlamrs)
-      //TODO start nvr sistem (check system space )
+      nvr_system.start()
       return true;
     } catch (error) {
       this.logger.err("error startNvr");

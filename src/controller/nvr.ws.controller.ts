@@ -6,8 +6,8 @@ import { nanoId } from '../lib/helper'
 import { NoLogger } from '../lib/no-logger'
 
 
-const logger = new NoLogger('NvrWsController', true)//, true)
-logger.log('Start log for NvrWsController')
+const logger = new NoLogger('NvrWsController')
+
 enum NvrEventName {
   PONG = 'pong',
   ManagerPush = 'push_manager',

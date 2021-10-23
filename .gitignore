@@ -11,4 +11,6 @@ package-lock.json
 storage*.db
 *.sql
 *.zip
-src/lib/testlog_.ts
+src/**/*_.ts
+src/**/*.ts_*
+.vscode/settings.json

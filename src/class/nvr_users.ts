@@ -109,7 +109,7 @@ class nvrUsers {
       if (type === 'api') {
         ws.online = true
         ws.on("close", (code: number, reason: string) => {
-          this.logger.log(`setWS type: ${type} disconnected - user.id: ${user?.id} user.idconnect:${user?.idconnect} ws.idConnect:${ws.idConnect} - reason: ${reason} code: ${code}`);
+          this.logger.log(`WS disconnected for user: (${user?.id})${user.username} type: ${type} - user.idconnect:${user?.idconnect} ws.idConnect:${ws.idConnect} - reason: ${reason} code: ${code}`);
           //this.logout(protocol, true)
           this.logoutAndDestroy(user.id)
         })
@@ -122,12 +122,12 @@ class nvrUsers {
           this.removeWS(user?.id!, ws.idConnect);
         });
         ws.on("close", (code: number, reason: string) => {
-          this.logger.log(`setWS type: ${type} disconnected - user.id: ${user?.id} user.idconnect:${user?.idconnect} ws.idConnect:${ws.idConnect} - reason: ${reason} code: ${code}`);
+          this.logger.log(`WS disconnected for user: (${user?.id})${user.username} type: ${type} - user.idconnect:${user?.idconnect} ws.idConnect:${ws.idConnect} - reason: ${reason} code: ${code}`);
           this.removeWS(user?.id!, ws.idConnect);
         });
       }
 
-      this.logger.log(`setWS: user: ${user.username} user.ws_list.size: ${user.ws_list.size}`)
+      this.logger.log(`WS SET for user: ${user.username} - type: ${type}  - ws.idConnect:${ws.idConnect}  user.ws_list.size: ${user.ws_list.size}`)
     }
 
 
@@ -156,9 +156,11 @@ class nvrUsers {
   async login(username: string, pass: string, ip: string): Promise<loginResponse> {
     const dbUser = await configBase.db.getUser(username, pass)
     if (dbUser) {
-      if (this.logoutAndDestroy(dbUser.id!.toString())) {
+      // TODO:rem necessario per scollegare utente quando cade websocket
+      /* if (this.logoutAndDestroy(dbUser.id!.toString())) {
         return { error: 'user logout, please reload and login', success: false, token: '' }
-      }
+      } */
+      // ***************************************************************
       let getData = helpers.date.dateString();
       let token = helpJwt.getToken(
         { id: `${dbUser.id!}`, create_at: getData },
@@ -209,10 +211,13 @@ class nvrUsers {
         user.ws_list.forEach(wsUser => {
           wsUser.ws.terminate()
         });
-
+        user.ws_list = new Map()
       }
-      this.remove(user.id)
-      this.logger.log(`logoutAndDestroy username:${user.username} this._listUsers.size: ${this._listUsers.size}`)
+
+      // TODO:rem necessario per scollegare utente quando cade websocket
+      //this.remove(user.id)
+      // ***************************************************************
+      this.logger.log(`logoutAndDestroy username:${user.username} user.ws_list.size:${user.ws_list.size} this._listUsers.size:${this._listUsers.size}`)
       return true
     }
     return false

@@ -1,6 +1,8 @@
 export default {
   identity: 'development',
   debug: { offLog: true, writeLog: true },
+  percentage_HD_space_reserved: 20,
+  space_max_GB_media: 20,
   serversStatic: false,
   serversStaticFolder: '../webclient',
   serversStaticRoute: '/',

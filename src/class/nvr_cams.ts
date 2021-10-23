@@ -54,8 +54,8 @@ class cams {
       );
       this._listCam.push(cam);
       const checkcam = await cam.InitCam(false, false)
-      this.logger.log(`Cams -> loadCams -> AFETR INIT: ${checkcam} -- ${configCam.id} - ${configCam.name} ${configCam.xaddr}`);
-      this.logger.w(`Cams -> loadCams -> AFETR INIT: ${checkcam} -- ${configCam.id} - ${configCam.name} ${configCam.xaddr}`);
+      this.logger.log(`Cams -> loadCams -> id:${configCam.id} - name:${configCam.name} - address onvif:${configCam.xaddr} - success: ${checkcam}`);
+      this.logger.w(`Cams -> loadCams -> AFTER INIT: ${checkcam} -- ${configCam.id} - ${configCam.name} ${configCam.xaddr}`);
 
     }))
   }
@@ -130,16 +130,20 @@ class cams {
         if (cam.recordingH24 === data)
           return
         cam.recordingH24 = data
-        if (cam.recordingH24)
+        if (cam.recordingH24) {
           cam.recordingContinuos()
+          this.logger.log(`Start recording H24 for cam ${cam.nameCam}`)
+        }
       } else if (NameOption === 'livemotion' && typeof data === 'boolean') {
         if (checkOnly)
           return cam.liveMotion
         if (cam.liveMotion === data)
           return
         cam.liveMotion = data
-        if (cam.liveMotion)
+        if (cam.liveMotion) {
           cam.liveMotionV2()
+          this.logger.log(`Start motion detection for cam ${cam.nameCam}`)
+        }
       } else if (NameOption === 'delete') {
         let check = await this.deleteCam(idCam)
         return check

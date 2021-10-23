@@ -2,11 +2,21 @@
 
 Network Video Surveillance
 
+# New Features
+
+- Task to monitor HD space for recording (default 20 GB)
+
+- Monitor user logins and more for a security report (logs in root folder)
+
+- Replaced the canvas element for the stream with the video element
+
 # Features
 
 - Support only onvif protocol
 
-- Websocket for video and command
+- Support audio/video
+
+- Websocket for stream and commands
 
 - Recording H24
 

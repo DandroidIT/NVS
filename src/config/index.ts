@@ -1,15 +1,17 @@
 
 import { connect, Model, Trilogy, } from "trilogy";
+import path from 'path'
 import * as knex from 'knex';
 import fs from "fs";
 import { NoLogger } from '../lib/no-logger'
 import { mycrypt } from '../lib/helper'
 import env_dev from './env_dev';
-const logger = new NoLogger('configbase', true)
-logger.log('log for configbase')
+
+const logger = new NoLogger('configbase')
+
 
 enum efolder {
-  storeCam = 'storecams',
+  storeCams = 'storecams',
   motion = 'motion',
   video = 'video'
 }
@@ -27,8 +29,11 @@ class configBase {
   public tokenExpiresIn = env_dev.tokenExpiresIn
   public namedb = env_dev.database
   public folderForCams = efolder
+  public rootForder = path.resolve('./')
+  public percentageSpaceReserved = env_dev.percentage_HD_space_reserved
+  public spaceMaxMedia = env_dev.space_max_GB_media
   private _db = new db(this.namedb);
-  splitVideoSecond = '10';
+  public splitVideoSecond = '10';
   public get db() {
     return this._db;
   }

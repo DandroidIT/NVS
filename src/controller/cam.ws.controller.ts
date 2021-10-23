@@ -6,8 +6,7 @@ import { NoLogger } from '../lib/no-logger'
 import NvrWsController from "./nvr.ws.controller";
 
 
-const logger = new NoLogger('CamWSController', true)
-logger.log('Start log for CamWSController')
+const logger = new NoLogger('CamWSController')
 enum CamEventName {
   CamControll = 'camcontroll',
   CamList = 'camlist',

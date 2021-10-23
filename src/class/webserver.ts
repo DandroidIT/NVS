@@ -17,7 +17,7 @@ import Nvr from './nvr';
 import Nvr_skt from './nvr_websocket';
 
 
-const logger = new NoLogger('_webserver', true)
+const logger = new NoLogger('webserver', true)
 logger.log('log for webserver')
 class serverApi extends Koa {
 
@@ -37,8 +37,6 @@ class serverApi extends Koa {
     this.baseRouters()
     if (configBase.AppClient.start) {
       this.use(koaMount(configBase.AppClient.route, koaStatic(path.join(__dirname, configBase.AppClient.folder))))
-      logger.log(`NVS server static info: ${configBase.AppClient.route}, public folder: ${configBase.AppClient.folder}`)
-      logger.w(`NVS server static info: ${configBase.AppClient.route}, public folder: ${configBase.AppClient.folder}`)
     }
     this.use(this._mwCheckAuth)
     this.use(
@@ -52,8 +50,14 @@ class serverApi extends Koa {
     Nvr_skt.Start(this._httpsServer)
 
     this._httpsServer.listen(this._port, this._ip, () => {
-      logger.info(`App listening on the ip ${this._ip}:${this._port}`);
-      logger.w(`App listening on the ip ${this._ip}:${this._port}`);
+      logger.info(`NVS server system listening on ip: https://${this._ip}:${this._port}`);
+      logger.w(`NVS server system listening on ip: https://${this._ip}:${this._port}`);
+      if (configBase.AppClient.start) {
+        logger.info(`Start NVS App listening on ip: https://${this._ip}:${this._port}${configBase.AppClient.route}/`);
+        logger.w(`Start NVS App listening on ip: https://${this._ip}:${this._port}${configBase.AppClient.route}/`);
+      }
+
+
     });
   }
 
@@ -87,8 +91,8 @@ class serverApi extends Koa {
     await next();
     const time2 = Date.now();
     const responseTime = Math.ceil(time2 - time1)
-    logger.log(`serverApi _logger | ip: ${ctx.ip} - type: ${ctx.type} protocol: ${ctx.protocol} method url: ${str} status: ${ctx.response.status} responseTime:${responseTime}`);
-    logger.w(`serverApi _logger | ip: ${ctx.ip} - type: ${ctx.type} protocol: ${ctx.protocol} method url: ${str} status: ${ctx.response.status} responseTime:${responseTime}`);
+    logger.log(`request | ip: ${ctx.ip} - type: ${ctx.type} protocol: ${ctx.protocol} method url: ${str} status: ${ctx.response.status} responseTime:${responseTime}`);
+    logger.w(`request | ip: ${ctx.ip} - type: ${ctx.type} protocol: ${ctx.protocol} method url: ${str} status: ${ctx.response.status} responseTime:${responseTime}`);
   }
 
 
